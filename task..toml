@@ -1,0 +1,285 @@
+Yes. This is a good first task, and the key is **verification**.
+
+You don't want:
+
+> User clicks "I subscribed" → system gives reward.
+
+That is garbage and will be abused immediately.
+
+You want:
+
+> User clicks "Join Channel" → Telegram opens the channel → user subscribes → your backend checks Telegram → only then does the task become completed.
+
+### The flow
+
+```text
+User opens your DApp
+        ↓
+Sees task:
+"Subscribe to @ExampleChannel"
+Reward: $1
+        ↓
+Clicks "Join Channel"
+        ↓
+Telegram opens channel
+        ↓
+User subscribes
+        ↓
+User returns to DApp
+        ↓
+Clicks "Verify Subscription"
+        ↓
+Your backend asks Telegram:
+"Is Telegram user 123456789 a member of @ExampleChannel?"
+        ↓
+        ├── NO → Task remains incomplete
+        │
+        └── YES
+             ↓
+       Record completion
+             ↓
+       Credit reward
+```
+
+## How does your system know?
+
+You need a **Telegram bot associated with the DApp**, but that does **not** mean your product is a bot.
+
+The bot acts as the **verification service**.
+
+For example:
+
+```text
+Telegram User
+ID: 582934721
+        │
+        ▼
+Your DApp
+        │
+        ▼
+Your NestJS backend
+        │
+        ▼
+Telegram Bot API
+        │
+        ▼
+Target Channel
+@mychannel
+```
+
+Your backend asks Telegram whether user `582934721` is currently a member of `@mychannel`.
+
+Telegram can return a membership status such as:
+
+```text
+member
+administrator
+creator
+left
+kicked
+```
+
+Your backend accepts only appropriate statuses such as `member`, `administrator`, or `creator`.
+
+---
+
+# What you record in PostgreSQL
+
+Don't just store:
+
+```text
+user.subscribed = true
+```
+
+That's too primitive.
+
+Create a proper task-completion record.
+
+For example:
+
+```text
+Task
+-------------------------
+id
+title
+type
+channel_username
+reward
+start_at
+end_at
+status
+```
+
+And:
+
+```text
+TaskCompletion
+-------------------------
+id
+task_id
+user_id
+status
+verified_at
+verification_method
+reward_status
+created_at
+```
+
+So when Brian completes the task:
+
+```text
+TaskCompletion
+
+user_id:              582934721
+task_id:              45
+status:                VERIFIED
+verified_at:           2026-09-12 14:42
+verification_method:   TELEGRAM_MEMBERSHIP
+reward_status:         PENDING
+```
+
+Then your reward system can process it.
+
+---
+
+# But there's another important problem
+
+Suppose I:
+
+1. Subscribe to the channel.
+2. Verify.
+3. Receive $1.
+4. Leave the channel.
+
+If your requirement is **"remain subscribed"**, then simply verifying once isn't enough.
+
+You need to decide the rule.
+
+### Option A — Verify once
+
+User subscribes → verification succeeds → reward permanently earned.
+
+Easy, but users can immediately leave.
+
+### Option B — Must remain subscribed
+
+User subscribes → verification succeeds → reward goes into pending state.
+
+Your system periodically checks membership again.
+
+```text
+SUBSCRIBED
+    ↓
+Verified
+    ↓
+Pending reward
+    ↓
+Still subscribed?
+   /       \
+ YES       NO
+ ↓          ↓
+Release    Cancel
+reward     reward
+```
+
+**For your platform, I'd use Option B if the campaign owner is paying specifically for subscribers.**
+
+---
+
+# Now add referrals
+
+This is where your idea gets interesting.
+
+Suppose the task says:
+
+> **Get 10 subscribers to @ExampleChannel**
+>
+> Reward: $5
+
+Your user gets a unique referral link:
+
+```text
+https://yourapp.com/task/45?ref=582934721
+```
+
+Or, because you're inside Telegram:
+
+```text
+https://t.me/YourAppBot?startapp=task45_ref582934721
+```
+
+Then:
+
+```text
+Brian shares link
+        ↓
+John opens DApp
+        ↓
+John joins @ExampleChannel
+        ↓
+Telegram verifies John
+        ↓
+John's completion recorded
+        ↓
+Brian's referral counter = +1
+```
+
+Database:
+
+```text
+Referral
+-------------------------
+id
+task_id
+referrer_id
+referred_user_id
+status
+verified_at
+reward
+```
+
+You could then show:
+
+```text
+🔥 Task Progress
+
+Target: 10 subscribers
+
+You have referred: 7
+
+██████████████░░░░░░ 70%
+
+3 more verified subscribers
+to unlock your reward.
+
+Your link:
+[ Share Task ]
+```
+
+### The critical anti-cheat rule
+
+**A referral should only count after the referred user has independently passed the Telegram membership verification.**
+
+Not when they click the link.
+
+Not when they open the DApp.
+
+Not when they press "Verify."
+
+Only after Telegram confirms the membership.
+
+---
+
+## One more thing: the channel must be configured correctly
+
+For reliable verification, your Telegram bot needs the appropriate access to the target channel. The exact Telegram API method/permissions matter here.
+
+So your architecture isn't:
+
+**DApp → magically knows Telegram subscription.**
+
+It's:
+
+**DApp → backend → Telegram Bot API → membership status → backend records verified completion.**
+
+That's the foundation I'd build your entire task system around.
