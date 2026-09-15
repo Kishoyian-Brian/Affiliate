@@ -1,0 +1,9 @@
+---
+description: Telegram Mini App entry and earner identity
+alwaysApply: true
+---
+
+# Telegram entry and identity
+
+- Opening Tasklane **inside Telegram** always goes to the Mini App (`/app`), never the marketing landing page.
+- The earner profile is the Telegram account: show `@username` when the user has one, otherwise their Telegram first name. Do not keep mock names like Brian on the live Mini App profile.

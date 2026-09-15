@@ -1,41 +1,46 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { profileFromTelegram } from '../lib/auth'
 import {
   getInitData,
   getStartParam,
   getTelegramUser,
   initTelegramApp,
+  isInsideTelegram as detectTelegram,
   parseStartParam,
 } from '../lib/telegram'
 import { mockUser } from '../data/mock'
+import type { UserProfile } from '../types/user'
+
+function readTelegramSession() {
+  const inside = detectTelegram()
+  if (!inside) {
+    return { inside: false, user: null as UserProfile | null, initData: '', startParam: null }
+  }
+
+  const telegramUser = getTelegramUser()
+  return {
+    inside: true,
+    user: telegramUser ? profileFromTelegram(mockUser, telegramUser) : null,
+    initData: getInitData(),
+    startParam: parseStartParam(getStartParam()),
+  }
+}
 
 export function useTelegram() {
+  const [session, setSession] = useState(readTelegramSession)
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
     initTelegramApp()
+    setSession(readTelegramSession())
     setReady(true)
   }, [])
 
-  const telegramUser = getTelegramUser()
-  const startParam = parseStartParam(getStartParam())
-
-  const user = useMemo(() => {
-    if (telegramUser) {
-      return {
-        ...mockUser,
-        telegramId: telegramUser.id,
-        firstName: telegramUser.first_name,
-        username: telegramUser.username,
-      }
-    }
-
-    return mockUser
-  }, [telegramUser])
-
   return {
     ready,
-    user,
-    initData: getInitData(),
-    startParam,
+    user: session.user,
+    initData: session.initData,
+    startParam: session.startParam,
+    isInsideTelegram: session.inside,
   }
 }

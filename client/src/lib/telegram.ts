@@ -1,12 +1,67 @@
 import WebApp from '@twa-dev/sdk'
 
+export const TELEGRAM_BOT_USERNAME =
+  import.meta.env.VITE_TELEGRAM_BOT_USERNAME ?? 'WILLIAM_SMITH_EMPIR_BOT'
+
+export interface TelegramUser {
+  id: number
+  first_name: string
+  last_name?: string
+  username?: string
+  language_code?: string
+}
+
 function getWebApp() {
   if (typeof window === 'undefined') return null
   return window.Telegram?.WebApp ?? WebApp ?? null
 }
 
+function initDataFromHash() {
+  if (typeof window === 'undefined') return ''
+  const hash = window.location.hash.startsWith('#')
+    ? window.location.hash.slice(1)
+    : window.location.hash
+  return new URLSearchParams(hash).get('tgWebAppData') ?? ''
+}
+
+export function getInitData(): string {
+  const app = getWebApp()
+  return app?.initData || initDataFromHash()
+}
+
+function parseUserFromInitData(initData: string): TelegramUser | undefined {
+  if (!initData) return undefined
+  try {
+    const raw = new URLSearchParams(initData).get('user')
+    if (!raw) return undefined
+    return JSON.parse(raw) as TelegramUser
+  } catch {
+    return undefined
+  }
+}
+
+export function isInsideTelegram() {
+  const app = getWebApp()
+  if (getInitData()) return true
+  if (app?.initDataUnsafe?.user?.id) return true
+  return false
+}
+
 export function isTelegramWebApp() {
-  return Boolean(getWebApp())
+  return isInsideTelegram()
+}
+
+export function getTelegramBotUrl() {
+  return `https://t.me/${TELEGRAM_BOT_USERNAME}`
+}
+
+/** Opens the Mini App through the bot. Use this for website CTAs. */
+export function getTelegramMiniAppUrl(startParam?: string) {
+  const base = getTelegramBotUrl()
+  if (startParam) {
+    return `${base}?startapp=${encodeURIComponent(startParam)}`
+  }
+  return `${base}?startapp`
 }
 
 export function initTelegramApp() {
@@ -19,12 +74,24 @@ export function initTelegramApp() {
   app.setBackgroundColor('#fafafa')
 }
 
-export function getTelegramUser() {
-  return getWebApp()?.initDataUnsafe?.user
+export function getTelegramUser(): TelegramUser | undefined {
+  const app = getWebApp()
+  const fromUnsafe = app?.initDataUnsafe?.user
+  if (fromUnsafe?.id) {
+    return {
+      id: fromUnsafe.id,
+      first_name: fromUnsafe.first_name,
+      last_name: fromUnsafe.last_name,
+      username: fromUnsafe.username,
+      language_code: fromUnsafe.language_code,
+    }
+  }
+  return parseUserFromInitData(getInitData())
 }
 
 export function getStartParam(): string | undefined {
-  return getWebApp()?.initDataUnsafe?.start_param
+  const app = getWebApp()
+  return app?.initDataUnsafe?.start_param || undefined
 }
 
 export function parseStartParam(param?: string) {
@@ -43,7 +110,7 @@ export function openTelegramChannel(username: string) {
   const url = `https://t.me/${username}`
   const app = getWebApp()
 
-  if (app?.openTelegramLink) {
+  if (isInsideTelegram() && app?.openTelegramLink) {
     app.openTelegramLink(url)
     return
   }
@@ -55,7 +122,7 @@ export function shareReferralLink(url: string, text: string) {
   const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`
   const app = getWebApp()
 
-  if (app?.openTelegramLink) {
+  if (isInsideTelegram() && app?.openTelegramLink) {
     app.openTelegramLink(shareUrl)
     return
   }
@@ -78,7 +145,7 @@ export async function copyToClipboard(text: string): Promise<boolean> {
 
 export function haptic(type: 'light' | 'medium' | 'heavy' | 'success' | 'error') {
   const app = getWebApp()
-  if (!app?.HapticFeedback) return
+  if (!isInsideTelegram() || !app?.HapticFeedback) return
 
   if (type === 'success' || type === 'error') {
     app.HapticFeedback.notificationOccurred(type)
@@ -86,8 +153,4 @@ export function haptic(type: 'light' | 'medium' | 'heavy' | 'success' | 'error')
   }
 
   app.HapticFeedback.impactOccurred(type)
-}
-
-export function getInitData(): string {
-  return getWebApp()?.initData ?? ''
 }

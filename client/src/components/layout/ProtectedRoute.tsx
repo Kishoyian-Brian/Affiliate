@@ -3,15 +3,19 @@ import { Navigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 
 export function ProtectedRoute({ children }: { children: ReactNode }) {
-  const { ready, isAuthenticated } = useAuth()
+  const { ready, isAuthenticated, isInsideTelegram } = useAuth()
 
-  if (!ready) {
-    return <div className="state-block">Loading…</div>
+  if (isAuthenticated) {
+    return children
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/" replace />
+  if (!ready || isInsideTelegram) {
+    return (
+      <div className="state-block">
+        {isInsideTelegram ? 'Opening Tasklane…' : 'Loading…'}
+      </div>
+    )
   }
 
-  return children
+  return <Navigate to="/" replace />
 }

@@ -1,4 +1,5 @@
 import type { VerifySubscriptionResult } from '../types/api'
+import type { TelegramAuthTokens } from '../types/auth'
 import type { LeaderboardEntry } from '../types/leaderboard'
 import type { AppNotification } from '../types/notification'
 import type { ProfileData } from '../types/user'
@@ -19,6 +20,20 @@ import {
 } from '../data/mock'
 
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
+
+export async function telegramLogin(initData: string): Promise<TelegramAuthTokens> {
+  const response = await fetch(`${API_BASE}/api/v1/auth/telegram`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ initData }),
+  })
+
+  if (!response.ok) {
+    throw new ApiError('Could not verify Telegram login')
+  }
+
+  return (await response.json()) as TelegramAuthTokens
+}
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))

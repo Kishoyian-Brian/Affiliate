@@ -3,6 +3,7 @@ import { AdminApp } from './admin/AdminApp'
 import { ReferralBootstrap } from './components/referrals/ReferralBootstrap'
 import { AppShell } from './components/layout/AppShell'
 import { ProtectedRoute } from './components/layout/ProtectedRoute'
+import { TelegramRedirect } from './components/layout/TelegramRedirect'
 import { AppConfigProvider } from './context/AppConfigContext'
 import { AuthProvider } from './context/AuthContext'
 import { ToastProvider } from './context/ToastContext'
@@ -22,6 +23,7 @@ function App() {
       <AuthProvider>
         <ToastProvider>
           <BrowserRouter>
+            <TelegramRedirect />
             <ReferralBootstrap />
             <Routes>
               <Route index element={<LandingPage />} />

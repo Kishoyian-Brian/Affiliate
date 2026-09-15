@@ -6,6 +6,7 @@ export interface AppConfig {
   defaultHoldHours: number
   currency: string
   apiBaseUrl: string
+  telegramBotUsername: string
 }
 
 const defaults: AppConfig = {
@@ -14,6 +15,7 @@ const defaults: AppConfig = {
   defaultHoldHours: 48,
   currency: 'USD',
   apiBaseUrl: import.meta.env.VITE_API_URL ?? 'http://localhost:3000',
+  telegramBotUsername: import.meta.env.VITE_TELEGRAM_BOT_USERNAME ?? 'WILLIAM_SMITH_EMPIR_BOT',
 }
 
 const AppConfigContext = createContext<AppConfig>(defaults)

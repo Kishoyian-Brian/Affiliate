@@ -12,15 +12,19 @@ const statusLabels = {
 } as const
 
 export function ProfileAccount({ user }: ProfileAccountProps) {
+  const telegramHandle = user.username ? `@${user.username}` : null
   const displayName = user.lastName ? `${user.firstName} ${user.lastName}` : user.firstName
+  const title = telegramHandle ?? displayName
+  const subtitle = telegramHandle ? displayName : null
+  const avatarLetter = (user.username ?? displayName).slice(0, 1).toUpperCase()
 
   return (
     <section className="section-card profile-account">
       <div className="profile-account-header">
-        <div className="profile-avatar">{displayName.slice(0, 1).toUpperCase()}</div>
+        <div className="profile-avatar">{avatarLetter}</div>
         <div>
-          <h3>{displayName}</h3>
-          {user.username ? <p className="profile-username">@{user.username}</p> : null}
+          <h3>{title}</h3>
+          {subtitle ? <p className="profile-username">{subtitle}</p> : null}
         </div>
       </div>
 

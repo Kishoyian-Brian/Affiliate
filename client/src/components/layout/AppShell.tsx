@@ -7,6 +7,8 @@ import { BottomNavigation } from './BottomNavigation'
 export function AppShell() {
   const { user } = useAuth()
 
+  if (!user) return null
+
   return (
     <div className="app-view">
       <header className="app-topbar">

@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+import { TelegramLaunchLink } from '../components/landing/TelegramLaunchLink'
 import { registerReferral } from '../lib/api'
 import { useTelegram } from '../hooks/useTelegram'
 
@@ -21,9 +22,7 @@ export function ReferralLandingPage() {
         <div className="empty-state">
           <h3>Welcome</h3>
           <p>Open a referral link from a friend to join a campaign.</p>
-          <Link to="/app" className="btn btn-primary">
-            Browse tasks
-          </Link>
+          <TelegramLaunchLink className="btn btn-primary">Browse tasks</TelegramLaunchLink>
         </div>
       </section>
     )

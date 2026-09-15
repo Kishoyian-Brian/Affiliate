@@ -1,5 +1,6 @@
-import { Link } from 'react-router-dom'
 import { Logo } from '../components/brand/Logo'
+import { TelegramLaunchLink } from '../components/landing/TelegramLaunchLink'
+import { useAuth } from '../hooks/useAuth'
 import '../styles/landing.css'
 
 const features = [
@@ -55,6 +56,12 @@ const faqs = [
 ]
 
 export function LandingPage() {
+  const { isInsideTelegram } = useAuth()
+
+  if (isInsideTelegram) {
+    return <div className="state-block">Opening Tasklane…</div>
+  }
+
   return (
     <div className="landing">
       <header className="landing-nav">
@@ -66,12 +73,8 @@ export function LandingPage() {
           <a href="#faq">FAQ</a>
         </nav>
         <div className="landing-nav-actions">
-          <Link to="/app" className="landing-btn-ghost">
-            Open app
-          </Link>
-          <Link to="/app" className="landing-btn-primary">
-            Start earning
-          </Link>
+          <TelegramLaunchLink className="landing-btn-ghost">Open app</TelegramLaunchLink>
+          <TelegramLaunchLink className="landing-btn-primary">Start earning</TelegramLaunchLink>
         </div>
       </header>
 
@@ -88,9 +91,7 @@ export function LandingPage() {
             prove your membership, earn rewards — or refer friends and unlock milestone bonuses.
           </p>
           <div className="landing-hero-cta">
-            <Link to="/app" className="landing-btn-primary">
-              Launch Mini App
-            </Link>
+            <TelegramLaunchLink className="landing-btn-primary">Launch Mini App</TelegramLaunchLink>
             <a href="#how-it-works" className="landing-btn-outline">
               See how it works
             </a>
@@ -330,9 +331,12 @@ export function LandingPage() {
           Open the Mini App to browse live tasks, or connect your channel to start acquiring
           verified subscribers.
         </p>
-        <Link to="/app" className="landing-btn-primary" style={{ minHeight: 48, padding: '12px 28px' }}>
+        <TelegramLaunchLink
+          className="landing-btn-primary"
+          style={{ minHeight: 48, padding: '12px 28px' }}
+        >
           Get started free
-        </Link>
+        </TelegramLaunchLink>
       </section>
 
       <footer className="landing-footer">
