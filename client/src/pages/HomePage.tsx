@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { TaskCard } from '../components/tasks/TaskCard'
 import { EmptyState } from '../components/ui/EmptyState'
+import { useCampaigns } from '../hooks/useCampaigns'
 import { useTasks } from '../hooks/useTasks'
-import type { TaskType } from '../types'
+import type { TaskType } from '../types/task'
 
 const filters: Array<{ id: 'all' | TaskType; label: string }> = [
   { id: 'all', label: 'All' },
@@ -11,13 +12,16 @@ const filters: Array<{ id: 'all' | TaskType; label: string }> = [
 ]
 
 export function HomePage() {
-  const { tasks, completions, loading, error, reload } = useTasks()
+  const { campaigns, loading, error, reload } = useCampaigns()
+  const { completions } = useTasks()
   const [filter, setFilter] = useState<'all' | TaskType>('all')
 
   const filteredTasks = useMemo(() => {
-    const list = filter === 'all' ? tasks : tasks.filter((task) => task.type === filter)
-    return [...list].sort((a, b) => a.slotsRemaining / a.slotsTotal - b.slotsRemaining / b.slotsTotal)
-  }, [filter, tasks])
+    const list = filter === 'all' ? campaigns : campaigns.filter((task) => task.type === filter)
+    return [...list].sort(
+      (a, b) => a.slotsRemaining / a.slotsTotal - b.slotsRemaining / b.slotsTotal,
+    )
+  }, [filter, campaigns])
 
   useEffect(() => {
     document.title = 'Tasklane — Campaigns'
@@ -30,7 +34,7 @@ export function HomePage() {
         <p>
           {loading
             ? 'Loading…'
-            : `${tasks.length} open campaign${tasks.length === 1 ? '' : 's'} · Verified via Telegram`}
+            : `${campaigns.length} open campaign${campaigns.length === 1 ? '' : 's'} · Verified via Telegram`}
         </p>
       </header>
 
@@ -65,7 +69,7 @@ export function HomePage() {
           title={filter === 'all' ? 'No campaigns available' : `No ${filter} campaigns`}
           description={
             filter === 'all'
-              ? 'New campaigns will appear here when channel owners publish them.'
+              ? 'New campaigns will appear here when they are published.'
               : 'Try another filter or check back later.'
           }
         />

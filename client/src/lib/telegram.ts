@@ -63,19 +63,17 @@ export function shareReferralLink(url: string, text: string) {
   window.open(shareUrl, '_blank', 'noopener,noreferrer')
 }
 
-export function copyToClipboard(text: string) {
-  const app = getWebApp()
-
-  if (app?.platform !== 'unknown' && navigator.clipboard) {
-    return navigator.clipboard.writeText(text)
+export async function copyToClipboard(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text)
+      return true
+    }
+  } catch {
+    return false
   }
 
-  if (app?.showAlert) {
-    app.showAlert('Copy this link:\n\n' + text)
-    return Promise.resolve()
-  }
-
-  return navigator.clipboard?.writeText(text) ?? Promise.resolve()
+  return false
 }
 
 export function haptic(type: 'light' | 'medium' | 'heavy' | 'success' | 'error') {

@@ -5,7 +5,7 @@ import type {
   TaskCompletion,
   TaskDifficulty,
   TaskType,
-} from '../types'
+} from '../types/task'
 
 export const completionStatusLabels: Record<CompletionStatus, string> = {
   not_started: 'Not started',

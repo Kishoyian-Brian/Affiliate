@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { WalletData } from '../types'
+import type { WalletData } from '../types/wallet'
 import { fetchWallet, requestWithdrawal } from '../lib/api'
+import { getErrorMessage } from '../lib/errors'
 
 export function useWallet() {
   const [wallet, setWallet] = useState<WalletData | null>(null)
@@ -35,7 +36,7 @@ export function useWallet() {
         setWallet(result)
         return { success: true as const }
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Withdrawal failed'
+        const message = getErrorMessage(err, 'Withdrawal failed')
         return { success: false as const, message }
       } finally {
         setWithdrawing(false)

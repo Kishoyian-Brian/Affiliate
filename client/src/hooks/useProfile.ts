@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { ProfileData } from '../types'
+import type { ProfileData } from '../types/user'
 import { fetchProfile } from '../lib/api'
 
 export function useProfile() {

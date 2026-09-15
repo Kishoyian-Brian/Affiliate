@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { Task, TaskCompletion } from '../types'
+import type { Task, TaskCompletion } from '../types/task'
 import {
   fetchAllCompletions,
   fetchCompletion,

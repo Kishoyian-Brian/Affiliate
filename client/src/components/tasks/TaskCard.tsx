@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import type { Task, TaskCompletion } from '../../types'
+import type { Task, TaskCompletion } from '../../types/task'
 import { daysLeft, formatMemberCount, formatMoney } from '../../lib/format'
 import {
   completionStatusLabels,

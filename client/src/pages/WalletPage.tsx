@@ -1,10 +1,9 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { PendingRewards } from '../components/wallet/PendingRewards'
-import { RewardHistory } from '../components/wallet/RewardHistory'
-import { WalletHero } from '../components/wallet/WalletHero'
-import { WithdrawPanel } from '../components/wallet/WithdrawPanel'
-import { WithdrawalHistory } from '../components/wallet/WithdrawalHistory'
+import { BalanceCard } from '../components/wallet/BalanceCard'
+import { EarningsSummary } from '../components/wallet/EarningsSummary'
+import { TransactionList } from '../components/wallet/TransactionList'
+import { WithdrawalForm } from '../components/wallet/WithdrawalForm'
 import { useWallet } from '../hooks/useWallet'
 
 export function WalletPage() {
@@ -38,15 +37,10 @@ export function WalletPage() {
         <p>Available balance, pending holds, and withdrawal history.</p>
       </header>
 
-      <WalletHero summary={wallet.summary} />
-
-      <PendingRewards rewards={wallet.rewards} />
-
-      <WithdrawPanel summary={wallet.summary} withdrawing={withdrawing} onWithdraw={withdraw} />
-
-      <RewardHistory rewards={wallet.rewards} />
-
-      <WithdrawalHistory withdrawals={wallet.withdrawals} />
+      <BalanceCard summary={wallet.summary} />
+      <EarningsSummary summary={wallet.summary} rewards={wallet.rewards} />
+      <WithdrawalForm summary={wallet.summary} withdrawing={withdrawing} onWithdraw={withdraw} />
+      <TransactionList rewards={wallet.rewards} withdrawals={wallet.withdrawals} />
 
       <p className="page-footnote">
         Rewards move to available balance after the hold period if you remain subscribed.{' '}

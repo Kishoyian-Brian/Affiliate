@@ -1,4 +1,5 @@
-import type { CompletionStatus, RewardStatus } from '../../types'
+import type { CompletionStatus } from '../../types/task'
+import type { RewardStatus } from '../../types/wallet'
 
 const completionLabels: Record<CompletionStatus, string> = {
   not_started: 'Not started',

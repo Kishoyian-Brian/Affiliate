@@ -1,4 +1,4 @@
-import type { UserProfile } from '../../types'
+import type { UserProfile } from '../../types/user'
 import { formatDate } from '../../lib/format'
 
 interface ProfileAccountProps {

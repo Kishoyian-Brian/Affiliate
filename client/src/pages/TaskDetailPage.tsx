@@ -1,26 +1,29 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ReferralPanel } from '../components/referrals/ReferralPanel'
-import { TaskActionPanel } from '../components/tasks/TaskActionPanel'
-import { TaskMetaGrid } from '../components/tasks/TaskMetaGrid'
-import { TaskRequirements } from '../components/tasks/TaskRequirements'
+import { CampaignHeader } from '../components/campaigns/CampaignHeader'
+import { CampaignProgress } from '../components/campaigns/CampaignProgress'
+import { CampaignRewardPreview } from '../components/campaigns/CampaignRewardPreview'
+import { ReferralHistory } from '../components/referrals/ReferralHistory'
+import { ReferralLinkCard } from '../components/referrals/ReferralLinkCard'
+import { ReferralStats } from '../components/referrals/ReferralStats'
+import { TaskRequirement } from '../components/tasks/TaskRequirement'
 import { TaskSteps } from '../components/tasks/TaskSteps'
-import { ChannelAvatar } from '../components/ui/ChannelAvatar'
-import { mockReferralProgress } from '../data/mock'
-import { useTelegram } from '../hooks/useTelegram'
+import { TaskVerification } from '../components/tasks/TaskVerification'
+import { useAuth } from '../hooks/useAuth'
+import { useReferrals } from '../hooks/useReferrals'
 import { useTaskDetail } from '../hooks/useTasks'
-import { formatMemberCount, formatMoney } from '../lib/format'
-import { completionStatusLabels, taskTypeLabels } from '../lib/task'
 import { haptic, openTelegramChannel } from '../lib/telegram'
+import { useToast } from '../hooks/useToast'
 
 export function TaskDetailPage() {
   const { taskId = '' } = useParams()
-  const { initData } = useTelegram()
+  const { initData } = useAuth()
+  const { toast } = useToast()
   const { task, completion, loading, verifying, verifyMessage, verify } = useTaskDetail(taskId)
+  const { progress, history } = useReferrals(task?.type === 'referral' ? taskId : undefined)
   const [joined, setJoined] = useState(false)
 
   const status = completion?.status ?? 'not_started'
-  const referralProgress = mockReferralProgress[taskId]
 
   const steps = useMemo(() => {
     if (!task) return []
@@ -81,15 +84,17 @@ export function TaskDetailPage() {
     }
   }, [status])
 
+  async function handleVerify() {
+    const result = await verify(initData)
+    if (!result) return
+    toast(result.message, result.success ? 'success' : 'error')
+  }
+
   function handleJoin() {
     if (!task) return
     haptic('light')
     openTelegramChannel(task.channelUsername)
     setJoined(true)
-  }
-
-  function handleVerify() {
-    void verify(initData)
   }
 
   if (loading) {
@@ -112,31 +117,10 @@ export function TaskDetailPage() {
 
   return (
     <section className="page task-detail">
-      <header className="page-header">
-        <p className="page-eyebrow">{taskTypeLabels[task.type]}</p>
-        <h1>{task.title}</h1>
-        <p>
-          @{task.channelUsername} · {formatMemberCount(task.channelMemberCount)} ·{' '}
-          {completionStatusLabels[status]}
-        </p>
-      </header>
+      <CampaignHeader task={task} status={status} />
+      <CampaignRewardPreview task={task} />
 
-      <section className="section-card task-detail-summary">
-        <div className="task-detail-summary-row">
-          <ChannelAvatar name={task.channelTitle} size="md" />
-          <div className="task-detail-summary-body">
-            <p className="task-detail-channel">{task.channelTitle}</p>
-            <p className="task-detail-sponsor">{task.sponsorName}</p>
-          </div>
-          <div className="task-detail-reward">
-            <span>{formatMoney(task.rewardAmount, task.rewardCurrency)}</span>
-            <small>{task.rewardLabel}</small>
-          </div>
-        </div>
-        <p className="task-detail-description">{task.description}</p>
-      </section>
-
-      <TaskActionPanel
+      <TaskVerification
         task={task}
         completion={completion}
         joined={joined}
@@ -146,7 +130,7 @@ export function TaskDetailPage() {
         onVerify={() => void handleVerify()}
       />
 
-      <TaskMetaGrid task={task} />
+      <CampaignProgress task={task} />
 
       <section className="section-card">
         <header className="section-header">
@@ -155,10 +139,18 @@ export function TaskDetailPage() {
         <TaskSteps steps={steps} />
       </section>
 
-      <TaskRequirements task={task} />
+      <TaskRequirement task={task} />
 
-      {task.type === 'referral' && referralProgress ? (
-        <ReferralPanel progress={referralProgress} taskTitle={task.channelTitle} />
+      {task.type === 'referral' && progress ? (
+        <section className="section-card referral-panel">
+          <header className="section-header">
+            <h2>Referral progress</h2>
+            <p>Only independently verified subscribers count.</p>
+          </header>
+          <ReferralStats progress={progress} />
+          <ReferralLinkCard referralLink={progress.referralLink} taskTitle={task.channelTitle} />
+          <ReferralHistory records={history} />
+        </section>
       ) : null}
     </section>
   )

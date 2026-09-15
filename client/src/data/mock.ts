@@ -1,13 +1,11 @@
-import type {
-  ProfileData,
-  ReferralProgress,
-  RewardEntry,
-  Task,
-  TaskCompletion,
-  UserProfile,
-  WalletData,
-  WithdrawalEntry,
-} from '../types'
+import type { ProfileData, UserProfile } from '../types/user'
+import type { ReferralProgress, ReferralRecord } from '../types/referral'
+import type { RewardEntry } from '../types/wallet'
+import type { Task, TaskCompletion } from '../types/task'
+import type { WalletData } from '../types/wallet'
+import type { WithdrawalEntry } from '../types/withdrawal'
+import type { LeaderboardEntry } from '../types/leaderboard'
+import type { AppNotification } from '../types/notification'
 
 export const mockUser: UserProfile = {
   telegramId: 582934721,
@@ -353,3 +351,96 @@ export const mockWallet: WalletData = {
   rewards: mockRewards,
   withdrawals: mockWithdrawals,
 }
+
+export const mockReferralHistory: ReferralRecord[] = [
+  {
+    id: 'ref-1',
+    taskId: '46',
+    referredDisplayName: 'Amina K.',
+    status: 'verified',
+    createdAt: '2026-09-12T11:20:00Z',
+  },
+  {
+    id: 'ref-2',
+    taskId: '46',
+    referredDisplayName: 'Leo M.',
+    status: 'pending',
+    createdAt: '2026-09-13T08:05:00Z',
+  },
+  {
+    id: 'ref-3',
+    taskId: '46',
+    referredDisplayName: 'Noah P.',
+    status: 'rejected',
+    createdAt: '2026-09-11T16:40:00Z',
+  },
+]
+
+export const mockLeaderboard: LeaderboardEntry[] = [
+  {
+    rank: 1,
+    telegramId: 1001,
+    displayName: 'Maya Chen',
+    username: 'maya',
+    completedTasks: 28,
+    totalEarned: 42.5,
+    currency: 'USD',
+  },
+  {
+    rank: 2,
+    telegramId: 582934721,
+    displayName: 'Brian',
+    username: 'brian',
+    completedTasks: 4,
+    totalEarned: 20.25,
+    currency: 'USD',
+    isCurrentUser: true,
+  },
+  {
+    rank: 3,
+    telegramId: 1003,
+    displayName: 'Omar H.',
+    username: 'omar',
+    completedTasks: 12,
+    totalEarned: 18.0,
+    currency: 'USD',
+  },
+  {
+    rank: 4,
+    telegramId: 1004,
+    displayName: 'Sofia R.',
+    completedTasks: 9,
+    totalEarned: 11.75,
+    currency: 'USD',
+  },
+]
+
+export const mockNotifications: AppNotification[] = [
+  {
+    id: 'n1',
+    type: 'reward_held',
+    title: 'Reward on hold',
+    body: 'Crypto Daily — $1.00 unlocks if you stay subscribed.',
+    createdAt: '2026-09-13T08:00:00Z',
+    read: false,
+    href: '/app/wallet',
+  },
+  {
+    id: 'n2',
+    type: 'referral',
+    title: 'Referral verified',
+    body: 'Amina K. passed membership verification for Tech Hub.',
+    createdAt: '2026-09-12T11:20:00Z',
+    read: false,
+    href: '/app/tasks/46',
+  },
+  {
+    id: 'n3',
+    type: 'withdrawal',
+    title: 'Withdrawal processing',
+    body: '$5.00 USDT is being sent to your payout address.',
+    createdAt: '2026-09-11T09:00:00Z',
+    read: true,
+    href: '/app/wallet',
+  },
+]

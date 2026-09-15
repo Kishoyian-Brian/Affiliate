@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import type { ProfileActivityItem, UserProfile } from '../../types'
+import type { ProfileActivityItem, UserProfile } from '../../types/user'
 import { formatDate, formatMoney } from '../../lib/format'
 
 interface ProfileActivityProps {

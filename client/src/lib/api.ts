@@ -1,11 +1,22 @@
-import type {
-  ProfileData,
-  Task,
-  TaskCompletion,
-  VerifySubscriptionResult,
-  WalletData,
-} from '../types'
-import { mockCompletions, mockProfile, mockTasks, mockWallet } from '../data/mock'
+import type { VerifySubscriptionResult } from '../types/api'
+import type { LeaderboardEntry } from '../types/leaderboard'
+import type { AppNotification } from '../types/notification'
+import type { ProfileData } from '../types/user'
+import type { ReferralProgress, ReferralRecord } from '../types/referral'
+import type { Task, TaskCompletion } from '../types/task'
+import type { WalletData } from '../types/wallet'
+import type { PayoutMethod } from '../types/withdrawal'
+import { ApiError } from './errors'
+import {
+  mockCompletions,
+  mockLeaderboard,
+  mockNotifications,
+  mockProfile,
+  mockReferralHistory,
+  mockReferralProgress,
+  mockTasks,
+  mockWallet,
+} from '../data/mock'
 
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
 
@@ -82,6 +93,26 @@ export async function registerReferral(
   console.info('Referral registered', { taskId, referrerId })
 }
 
+export async function fetchReferralProgress(taskId: string): Promise<ReferralProgress | undefined> {
+  await delay(200)
+  return mockReferralProgress[taskId]
+}
+
+export async function fetchReferralHistory(taskId: string): Promise<ReferralRecord[]> {
+  await delay(200)
+  return mockReferralHistory.filter((item) => item.taskId === taskId)
+}
+
+export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
+  await delay(300)
+  return mockLeaderboard.map((entry) => ({ ...entry }))
+}
+
+export async function fetchNotifications(): Promise<AppNotification[]> {
+  await delay(250)
+  return mockNotifications.map((item) => ({ ...item }))
+}
+
 export async function fetchProfile(): Promise<ProfileData> {
   await delay(300)
   return structuredClone(mockProfile)
@@ -94,7 +125,7 @@ export async function fetchWallet(): Promise<WalletData> {
 
 export async function requestWithdrawal(
   amount: number,
-  method: 'ton' | 'usdt' | 'telegram_stars',
+  method: PayoutMethod,
   destination: string,
 ): Promise<WalletData> {
   await delay(800)
@@ -102,15 +133,15 @@ export async function requestWithdrawal(
   const { summary } = mockWallet
 
   if (amount < summary.minWithdrawal) {
-    throw new Error(`Minimum withdrawal is ${summary.minWithdrawal} ${summary.currency}`)
+    throw new ApiError(`Minimum withdrawal is ${summary.minWithdrawal} ${summary.currency}`)
   }
 
   if (amount > summary.availableBalance) {
-    throw new Error('Insufficient available balance')
+    throw new ApiError('Insufficient available balance')
   }
 
   if (!destination.trim()) {
-    throw new Error('Enter a payout destination')
+    throw new ApiError('Enter a payout destination')
   }
 
   const fee = Math.round(amount * (summary.withdrawalFeePct / 100) * 100) / 100
