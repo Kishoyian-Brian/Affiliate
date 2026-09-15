@@ -23,7 +23,7 @@ describe('TASKLANE_START_MESSAGE', () => {
 
     expect(urls.tasklaneUrl).toBe('https://client-psi-six-83.vercel.app');
     expect(keyboard.inline_keyboard[0]).toEqual([
-      { text: TASKLANE_OPEN_BUTTON_TEXT, url: 'https://client-psi-six-83.vercel.app' },
+      { text: TASKLANE_OPEN_BUTTON_TEXT, web_app: { url: 'https://client-psi-six-83.vercel.app' } },
     ]);
     expect(keyboard.inline_keyboard[1]).toEqual([
       { text: TASKLANE_OPEN_CHANNEL_BUTTON_TEXT, url: 'https://t.me/TasklaneSupport' },

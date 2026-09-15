@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import type { Task, TaskCompletion } from '../../types/task'
 import { formatDateTime, formatMoney } from '../../lib/format'
-import { isTerminalStatus } from '../../lib/task'
+import { isAffiliateTask, isTerminalStatus } from '../../lib/task'
 
 interface TaskVerificationProps {
   task: Task
@@ -23,8 +23,10 @@ export function TaskVerification({
   onVerify,
 }: TaskVerificationProps) {
   const status = completion?.status ?? 'not_started'
-  const showJoin = status === 'not_started' && !joined
+  const affiliate = isAffiliateTask(task)
+  const showJoin = affiliate || (status === 'not_started' && !joined)
   const showVerify =
+    !affiliate &&
     !isTerminalStatus(status) &&
     (joined || status === 'awaiting_verification' || status === 'failed')
 
@@ -37,9 +39,23 @@ export function TaskVerification({
       {showJoin ? (
         <div className="action-block">
           <button type="button" className="btn btn-primary btn-block" onClick={onJoin}>
-            Join @{task.channelUsername}
+            {affiliate ? 'Launch' : `Join @${task.channelUsername}`}
           </button>
-          <p className="helper-text">Opens Telegram. Subscribe to the channel, then return here.</p>
+          <p className="helper-text">
+            {affiliate
+              ? 'Telegram will ask you to launch. Confirm Launch to open it inside Telegram — no site URL is shown.'
+              : 'Opens Telegram. Subscribe to the channel, then return here.'}
+          </p>
+        </div>
+      ) : null}
+
+      {affiliate && (joined || status !== 'not_started') ? (
+        <div className="status-callout info">
+          <strong>Waiting for a qualified player</strong>
+          <p>
+            Invite a friend from Telegram. {formatMoney(task.rewardAmount, task.rewardCurrency)} is
+            credited when they deposit and actually play.
+          </p>
         </div>
       ) : null}
 

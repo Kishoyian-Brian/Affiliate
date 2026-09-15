@@ -9,6 +9,7 @@ const filters: Array<{ id: 'all' | TaskType; label: string }> = [
   { id: 'all', label: 'All' },
   { id: 'subscribe', label: 'Subscribe' },
   { id: 'referral', label: 'Referral' },
+  { id: 'affiliate', label: 'Affiliate' },
 ]
 
 export function HomePage() {

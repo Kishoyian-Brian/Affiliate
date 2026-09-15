@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom'
 import type { Task, TaskCompletion } from '../../types/task'
+import { getCampaignTargetLabel } from '../../lib/affiliate'
 import { daysLeft, formatMemberCount, formatMoney } from '../../lib/format'
 import {
   completionStatusLabels,
   getCompletionStatus,
+  isAffiliateTask,
   isSlotsLow,
   taskTypeLabels,
 } from '../../lib/task'
@@ -33,7 +35,9 @@ export function TaskCard({ task, completion }: TaskCardProps) {
           </span>
         </div>
         <p className="task-row-secondary">
-          @{task.channelUsername} · {formatMemberCount(task.channelMemberCount)} ·{' '}
+          {getCampaignTargetLabel(task)}
+          {isAffiliateTask(task) ? '' : ` · ${formatMemberCount(task.channelMemberCount)}`}
+          {' · '}
           {taskTypeLabels[task.type]}
         </p>
         <p className="task-row-tertiary">
@@ -41,7 +45,9 @@ export function TaskCard({ task, completion }: TaskCardProps) {
           {slotsLow ? ' · Limited spots' : ''}
           {ended ? ' · Ended' : ''}
           {' · '}
-          {task.holdHours}h hold · {task.slotsRemaining} spots · {daysLeft(task.endAt)}d left
+          {isAffiliateTask(task)
+            ? `${formatMoney(task.rewardAmount, task.rewardCurrency)} per qualified player · ${task.slotsRemaining} spots · ${daysLeft(task.endAt)}d left`
+            : `${task.holdHours}h hold · ${task.slotsRemaining} spots · ${daysLeft(task.endAt)}d left`}
         </p>
       </div>
       <svg

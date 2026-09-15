@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { AdminCampaign } from '../../types'
+import { getCampaignTargetLabel } from '../../../lib/affiliate'
 import { formatDate, formatMoney } from '../../lib/format'
 import { AdminTable } from '../ui/AdminTable'
 import { CampaignStatusBadge } from './CampaignStatusBadge'
@@ -47,7 +48,7 @@ export function CampaignTable({ campaigns, onStatusChange }: CampaignTableProps)
                 {campaign.title}
               </Link>
             </td>
-            <td>@{campaign.channelUsername}</td>
+            <td>{getCampaignTargetLabel(campaign)}</td>
             <td className="admin-capitalize">{campaign.type}</td>
             <td className="col-num">{formatMoney(campaign.rewardAmount, campaign.rewardCurrency)}</td>
             <td>

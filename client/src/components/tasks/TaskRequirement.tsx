@@ -1,4 +1,5 @@
 import type { Task } from '../../types/task'
+import { isAffiliateTask } from '../../lib/task'
 
 interface TaskRequirementProps {
   task: Task
@@ -6,6 +7,7 @@ interface TaskRequirementProps {
 
 export function TaskRequirement({ task }: TaskRequirementProps) {
   const { requirements } = task
+  const affiliate = isAffiliateTask(task)
 
   return (
     <section className="section-card">
@@ -16,19 +18,31 @@ export function TaskRequirement({ task }: TaskRequirementProps) {
       <ul className="task-requirements-list">
         <li>
           <strong>Verification</strong>
-          <span>Telegram Bot API membership check</span>
+          <span>
+            {affiliate
+              ? 'Trading app confirms deposit and play'
+              : 'Telegram Bot API membership check'}
+          </span>
         </li>
         <li>
-          <strong>Hold period</strong>
+          <strong>{affiliate ? 'Qualification' : 'Hold period'}</strong>
           <span>
-            {requirements.mustStaySubscribed
-              ? `${requirements.holdHours} hours after verification`
-              : 'None'}
+            {affiliate
+              ? 'Referred friend deposits and actually plays'
+              : requirements.mustStaySubscribed
+                ? `${requirements.holdHours} hours after verification`
+                : 'None'}
           </span>
         </li>
         <li>
           <strong>Eligibility</strong>
-          <span>{requirements.newMembersOnly ? 'New subscribers only' : 'All subscribers'}</span>
+          <span>
+            {affiliate
+              ? 'New referred players only'
+              : requirements.newMembersOnly
+                ? 'New subscribers only'
+                : 'All subscribers'}
+          </span>
         </li>
         {requirements.minAccountAgeDays ? (
           <li>
@@ -38,7 +52,11 @@ export function TaskRequirement({ task }: TaskRequirementProps) {
         ) : null}
         <li>
           <strong>Limit</strong>
-          <span>{requirements.maxCompletionsPerUser} completion per account</span>
+          <span>
+            {affiliate
+              ? '$40 per qualified friend'
+              : `${requirements.maxCompletionsPerUser} completion per account`}
+          </span>
         </li>
       </ul>
 

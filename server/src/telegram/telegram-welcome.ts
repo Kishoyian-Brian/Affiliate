@@ -38,10 +38,10 @@ export function resolveStartButtonUrls(input: {
   };
 }
 
-export function startMessageKeyboard(tasklaneUrl: string, channelUrl: string) {
+export function startMessageKeyboard(miniAppUrl: string, channelUrl: string) {
   return {
     inline_keyboard: [
-      [{ text: TASKLANE_OPEN_BUTTON_TEXT, url: tasklaneUrl }],
+      [{ text: TASKLANE_OPEN_BUTTON_TEXT, web_app: { url: miniAppUrl } }],
       [{ text: TASKLANE_OPEN_CHANNEL_BUTTON_TEXT, url: channelUrl }],
     ],
   };

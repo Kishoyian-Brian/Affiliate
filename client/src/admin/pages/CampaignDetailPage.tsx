@@ -4,6 +4,7 @@ import { CampaignStatusBadge } from '../components/campaigns/CampaignStatusBadge
 import { AdminTable } from '../components/ui/AdminTable'
 import { PageHeader } from '../components/ui/PageHeader'
 import { StatCard } from '../components/ui/StatCard'
+import { getCampaignTargetLabel } from '../../lib/affiliate'
 import {
   fetchCampaign,
   fetchCampaignCompletions,
@@ -39,7 +40,7 @@ export function CampaignDetailPage() {
 
   return (
     <section>
-      <PageHeader title={campaign.title} description={`@${campaign.channelUsername}`} />
+      <PageHeader title={campaign.title} description={getCampaignTargetLabel(campaign)} />
 
       <div className="admin-detail-actions">
         <CampaignStatusBadge status={campaign.status} />
@@ -96,10 +97,23 @@ export function CampaignDetailPage() {
               <dt>Reward</dt>
               <dd>{formatMoney(campaign.rewardAmount, campaign.rewardCurrency)}</dd>
             </div>
-            <div>
-              <dt>Hold</dt>
-              <dd>{campaign.holdHours} hours</dd>
-            </div>
+            {campaign.affiliateUrl ? (
+              <div>
+                <dt>Site</dt>
+                <dd>{campaign.affiliateUrl}</dd>
+              </div>
+            ) : null}
+            {campaign.type === 'affiliate' ? (
+              <div>
+                <dt>Pays when</dt>
+                <dd>Referred friend deposits and plays</dd>
+              </div>
+            ) : (
+              <div>
+                <dt>Hold</dt>
+                <dd>{campaign.holdHours} hours</dd>
+              </div>
+            )}
             <div>
               <dt>Schedule</dt>
               <dd>

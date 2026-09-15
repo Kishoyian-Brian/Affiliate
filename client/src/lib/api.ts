@@ -65,6 +65,23 @@ export async function verifySubscription(
 ): Promise<VerifySubscriptionResult> {
   await delay(1200)
 
+  const task = mockTasks.find((item) => item.id === taskId)
+
+  if (task?.type === 'affiliate') {
+    mockCompletions[taskId] = {
+      taskId,
+      status: 'awaiting_verification',
+      rewardStatus: 'none',
+    }
+    return {
+      success: true,
+      completionStatus: 'awaiting_verification',
+      rewardStatus: 'none',
+      message:
+        '$40 is credited when the trading app confirms a referred friend deposited and played.',
+    }
+  }
+
   const random = Math.random()
   if (random < 0.15) {
     return {
@@ -75,7 +92,6 @@ export async function verifySubscription(
     }
   }
 
-  const task = mockTasks.find((item) => item.id === taskId)
   const holdReleaseAt = task
     ? new Date(Date.now() + task.holdHours * 60 * 60 * 1000).toISOString()
     : undefined

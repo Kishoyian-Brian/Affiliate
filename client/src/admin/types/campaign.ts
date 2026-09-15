@@ -1,6 +1,6 @@
 export type CampaignStatus = 'draft' | 'active' | 'paused' | 'ended'
 
-export type CampaignType = 'subscribe' | 'referral'
+export type CampaignType = 'subscribe' | 'referral' | 'affiliate'
 
 export type BotAccessStatus = 'unknown' | 'ok' | 'failed'
 
@@ -51,6 +51,7 @@ export interface AdminCampaign {
   rewardAmount: number
   rewardCurrency: string
   referralTarget?: number
+  affiliateUrl?: string
   holdHours: number
   slotsTotal: number
   slotsRemaining: number
@@ -89,6 +90,7 @@ export interface CampaignInput {
   rewardAmount: number
   rewardCurrency: string
   referralTarget?: number
+  affiliateUrl?: string
   holdHours: number
   slotsTotal: number
   requirements: CampaignRequirements

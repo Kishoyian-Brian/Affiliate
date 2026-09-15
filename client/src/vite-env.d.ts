@@ -5,6 +5,8 @@ interface ImportMetaEnv {
   readonly VITE_TELEGRAM_BOT_URL?: string
   readonly VITE_TELEGRAM_MINI_APP_URL?: string
   readonly VITE_TELEGRAM_CHANNEL_URL?: string
+  readonly VITE_AFFILIATE_AITRADE_URL?: string
+  readonly VITE_AFFILIATE_MINI_APP_SLUG?: string
 }
 
 interface ImportMeta {
@@ -33,6 +35,7 @@ interface TelegramWebApp {
   initDataUnsafe: TelegramWebAppInitData
   platform: string
   openTelegramLink: (url: string) => void
+  openLink: (url: string) => void
   showAlert: (message: string) => void
   HapticFeedback: {
     impactOccurred: (style: 'light' | 'medium' | 'heavy') => void

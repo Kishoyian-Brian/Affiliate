@@ -1,7 +1,21 @@
 import type { ReferralProgress } from '../../types/referral'
 import { ProgressBar } from '../ui/ProgressBar'
 
-export function ReferralStats({ progress }: { progress: ReferralProgress }) {
+interface ReferralStatsProps {
+  progress: ReferralProgress
+  perConversion?: boolean
+}
+
+export function ReferralStats({ progress, perConversion }: ReferralStatsProps) {
+  if (perConversion || progress.target <= 0) {
+    return (
+      <p className="referral-remaining">
+        {progress.verifiedCount} qualified · {progress.pendingCount} pending · {progress.rejectedCount}{' '}
+        rejected. Each qualified player pays $40.
+      </p>
+    )
+  }
+
   const remaining = Math.max(0, progress.target - progress.verifiedCount)
 
   return (

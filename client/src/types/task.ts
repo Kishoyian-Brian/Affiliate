@@ -1,6 +1,6 @@
 import type { RewardStatus } from './wallet'
 
-export type TaskType = 'subscribe' | 'referral'
+export type TaskType = 'subscribe' | 'referral' | 'affiliate'
 
 export type TaskStatus = 'active' | 'paused' | 'ended'
 
@@ -44,6 +44,7 @@ export interface Task {
   rewardLabel: string
   referralTarget?: number
   referralRewardPerUser?: number
+  affiliateUrl?: string
   holdHours: number
   estimatedMinutes: number
   slotsTotal: number

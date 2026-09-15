@@ -120,7 +120,11 @@ export function parseStartParam(param?: string) {
 }
 
 export function openTelegramChannel(username: string) {
-  const url = `https://t.me/${username}`
+  openTelegramUrl(`https://t.me/${username}`)
+}
+
+/** Opens a t.me Mini App or chat link inside Telegram (Launch), never the system browser. */
+export function openTelegramUrl(url: string) {
   const app = getWebApp()
 
   if (isInsideTelegram() && app?.openTelegramLink) {
@@ -128,7 +132,7 @@ export function openTelegramChannel(username: string) {
     return
   }
 
-  window.open(url, '_blank', 'noopener,noreferrer')
+  window.location.assign(url)
 }
 
 export function shareReferralLink(url: string, text: string) {

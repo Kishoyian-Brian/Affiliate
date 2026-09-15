@@ -9,24 +9,61 @@ import { ReferralStats } from '../components/referrals/ReferralStats'
 import { TaskRequirement } from '../components/tasks/TaskRequirement'
 import { TaskSteps } from '../components/tasks/TaskSteps'
 import { TaskVerification } from '../components/tasks/TaskVerification'
+import { mockUser } from '../data/mock'
 import { useAuth } from '../hooks/useAuth'
 import { useReferrals } from '../hooks/useReferrals'
 import { useTaskDetail } from '../hooks/useTasks'
-import { haptic, openTelegramChannel } from '../lib/telegram'
 import { useToast } from '../hooks/useToast'
+import { buildAffiliateMiniAppLink } from '../lib/affiliate'
+import { isAffiliateTask, isShareTask } from '../lib/task'
+import { haptic, openTelegramChannel, openTelegramUrl, TELEGRAM_BOT_USERNAME } from '../lib/telegram'
 
 export function TaskDetailPage() {
   const { taskId = '' } = useParams()
-  const { initData } = useAuth()
+  const { user, initData } = useAuth()
   const { toast } = useToast()
   const { task, completion, loading, verifying, verifyMessage, verify } = useTaskDetail(taskId)
-  const { progress, history } = useReferrals(task?.type === 'referral' ? taskId : undefined)
+  const { progress, history } = useReferrals(task && isShareTask(task) ? taskId : undefined)
   const [joined, setJoined] = useState(false)
 
   const status = completion?.status ?? 'not_started'
+  const affiliate = task ? isAffiliateTask(task) : false
+  const telegramId = user?.telegramId ?? mockUser.telegramId
+
+  const affiliateLaunchUrl = useMemo(() => {
+    if (!affiliate) return ''
+    return buildAffiliateMiniAppLink(TELEGRAM_BOT_USERNAME, telegramId)
+  }, [affiliate, telegramId])
+
+  const referralLink = affiliate ? affiliateLaunchUrl : progress?.referralLink ?? ''
 
   const steps = useMemo(() => {
     if (!task) return []
+
+    if (isAffiliateTask(task)) {
+      return [
+        {
+          id: 1,
+          label: 'Tap Launch — Telegram asks you to open the app',
+          done: joined || status !== 'not_started',
+        },
+        {
+          id: 2,
+          label: 'Confirm Launch so it opens inside Telegram',
+          done: joined || status !== 'not_started',
+        },
+        {
+          id: 3,
+          label: 'Invite a friend who deposits and plays',
+          done: (progress?.verifiedCount ?? 0) > 0 || status === 'completed',
+        },
+        {
+          id: 4,
+          label: '$40 released to your wallet',
+          done: completion?.rewardStatus === 'released',
+        },
+      ]
+    }
 
     const base = [
       {
@@ -70,7 +107,7 @@ export function TaskDetailPage() {
         done: completion?.rewardStatus === 'released',
       },
     ]
-  }, [task, joined, status, completion?.rewardStatus])
+  }, [task, joined, status, completion?.rewardStatus, progress?.verifiedCount])
 
   useEffect(() => {
     if (task) {
@@ -93,7 +130,11 @@ export function TaskDetailPage() {
   function handleJoin() {
     if (!task) return
     haptic('light')
-    openTelegramChannel(task.channelUsername)
+    if (isAffiliateTask(task)) {
+      openTelegramUrl(buildAffiliateMiniAppLink(TELEGRAM_BOT_USERNAME, telegramId))
+    } else {
+      openTelegramChannel(task.channelUsername)
+    }
     setJoined(true)
   }
 
@@ -141,14 +182,27 @@ export function TaskDetailPage() {
 
       <TaskRequirement task={task} />
 
-      {task.type === 'referral' && progress ? (
+      {isShareTask(task) && (progress || affiliate) ? (
         <section className="section-card referral-panel">
           <header className="section-header">
-            <h2>Referral progress</h2>
-            <p>Only independently verified subscribers count.</p>
+            <h2>{affiliate ? 'Invite friends' : 'Referral progress'}</h2>
+            <p>
+              {affiliate
+                ? '$40 posts when a referred friend deposits and plays. Invites open inside Telegram.'
+                : 'Only independently verified subscribers count.'}
+            </p>
           </header>
-          <ReferralStats progress={progress} />
-          <ReferralLinkCard referralLink={progress.referralLink} taskTitle={task.channelTitle} />
+          {progress ? <ReferralStats progress={progress} perConversion={affiliate} /> : null}
+          {referralLink ? (
+            <ReferralLinkCard
+              referralLink={referralLink}
+              taskTitle={task.channelTitle}
+              hideLink={affiliate}
+              shareText={
+                affiliate ? 'Launch AI AutoTrade with me in Telegram' : undefined
+              }
+            />
+          ) : null}
           <ReferralHistory records={history} />
         </section>
       ) : null}

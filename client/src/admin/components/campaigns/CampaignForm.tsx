@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { getAffiliateHostname, normalizeAffiliateUrl } from '../../../lib/affiliate'
 import type { AdminCampaign, CampaignInput } from '../../types'
 
 const emptyForm: CampaignInput = {
@@ -48,6 +49,7 @@ export function CampaignForm({ initial, saving, onSubmit, onCancel }: CampaignFo
           rewardAmount: initial.rewardAmount,
           rewardCurrency: initial.rewardCurrency,
           referralTarget: initial.referralTarget,
+          affiliateUrl: initial.affiliateUrl,
           holdHours: initial.holdHours,
           slotsTotal: initial.slotsTotal,
           requirements: { ...initial.requirements },
@@ -67,11 +69,22 @@ export function CampaignForm({ initial, saving, onSubmit, onCancel }: CampaignFo
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
+    const isAffiliate = form.type === 'affiliate'
+    const affiliateUrl = isAffiliate ? normalizeAffiliateUrl(form.affiliateUrl) : undefined
     const input: CampaignInput = {
       ...form,
-      channelUsername: form.channelUsername.replace('@', '').trim(),
+      affiliateUrl,
+      channelUsername: isAffiliate
+        ? form.channelUsername.replace('@', '').trim() ||
+          getAffiliateHostname(affiliateUrl).replace(/\./g, '-')
+        : form.channelUsername.replace('@', '').trim(),
       rules: rulesText.split('\n').map((r) => r.trim()).filter(Boolean),
-      requirements: { ...form.requirements, holdHours: form.holdHours },
+      requirements: {
+        ...form.requirements,
+        holdHours: isAffiliate ? 0 : form.holdHours,
+        mustStaySubscribed: isAffiliate ? false : form.requirements.mustStaySubscribed,
+      },
+      holdHours: isAffiliate ? 0 : form.holdHours,
       startAt: new Date(form.startAt).toISOString(),
       endAt: new Date(form.endAt + 'T23:59:59').toISOString(),
     }
@@ -110,9 +123,31 @@ export function CampaignForm({ initial, saving, onSubmit, onCancel }: CampaignFo
           </label>
           <label className="admin-field">
             <span>Type</span>
-            <select value={form.type} onChange={(e) => update('type', e.target.value as CampaignInput['type'])}>
+            <select
+              value={form.type}
+              onChange={(e) => {
+                const type = e.target.value as CampaignInput['type']
+                setForm((prev) => ({
+                  ...prev,
+                  type,
+                  ...(type === 'affiliate'
+                    ? {
+                        holdHours: 0,
+                        affiliateUrl: prev.affiliateUrl || 'https://aiautotrade.trade',
+                        channelTitle: prev.channelTitle || 'AI AutoTrade',
+                        requirements: {
+                          ...prev.requirements,
+                          mustStaySubscribed: false,
+                          holdHours: 0,
+                        },
+                      }
+                    : {}),
+                }))
+              }}
+            >
               <option value="subscribe">Subscribe</option>
               <option value="referral">Referral</option>
+              <option value="affiliate">Affiliate</option>
             </select>
           </label>
           <label className="admin-field">
@@ -131,37 +166,53 @@ export function CampaignForm({ initial, saving, onSubmit, onCancel }: CampaignFo
       </section>
 
       <section className="admin-form-section">
-        <h2>Target channel</h2>
+        <h2>{form.type === 'affiliate' ? 'Affiliate site' : 'Target channel'}</h2>
         <p className="admin-form-note">
-          You add every campaign manually. Ensure the bot is admin on this channel before publishing.
+          {form.type === 'affiliate'
+            ? 'Earners share a tagged link. $40 is paid when a referred friend deposits and plays.'
+            : 'You add every campaign manually. Ensure the bot is admin on this channel before publishing.'}
         </p>
         <div className="admin-form-grid">
+          {form.type === 'affiliate' ? (
+            <label className="admin-field admin-field-full">
+              <span>Site URL</span>
+              <input
+                required
+                placeholder="https://aiautotrade.trade"
+                value={form.affiliateUrl ?? ''}
+                onChange={(e) => update('affiliateUrl', e.target.value)}
+              />
+            </label>
+          ) : (
+            <label className="admin-field">
+              <span>Channel username</span>
+              <input
+                required
+                placeholder="cryptodaily"
+                value={form.channelUsername}
+                onChange={(e) => update('channelUsername', e.target.value)}
+              />
+            </label>
+          )}
           <label className="admin-field">
-            <span>Channel username</span>
-            <input
-              required
-              placeholder="cryptodaily"
-              value={form.channelUsername}
-              onChange={(e) => update('channelUsername', e.target.value)}
-            />
-          </label>
-          <label className="admin-field">
-            <span>Channel title</span>
+            <span>{form.type === 'affiliate' ? 'Site name' : 'Channel title'}</span>
             <input
               required
               value={form.channelTitle}
               onChange={(e) => update('channelTitle', e.target.value)}
             />
           </label>
-          <label className="admin-field">
-            <span>Member count</span>
-            <input
-              type="number"
-              min={0}
-              value={form.channelMemberCount || ''}
-              onChange={(e) => update('channelMemberCount', Number(e.target.value) || 0)}
-            />
-          </label>
+          {form.type === 'affiliate' ? null : (
+            <label className="admin-field">
+              <span>Member count</span>
+              <input
+                type="number"
+                min={0}
+                value={form.channelMemberCount || ''}
+                onChange={(e) => update('channelMemberCount', Number(e.target.value) || 0)}
+              />
+            </label>
+          )}
           <label className="admin-field">
             <span>Sponsor label</span>
             <input value={form.sponsorName} onChange={(e) => update('sponsorName', e.target.value)} />
@@ -187,15 +238,17 @@ export function CampaignForm({ initial, saving, onSubmit, onCancel }: CampaignFo
             <span>Currency</span>
             <input value={form.rewardCurrency} onChange={(e) => update('rewardCurrency', e.target.value)} />
           </label>
-          <label className="admin-field">
-            <span>Hold period (hours)</span>
-            <input
-              type="number"
-              min={1}
-              value={form.holdHours}
-              onChange={(e) => update('holdHours', Number(e.target.value))}
-            />
-          </label>
+          {form.type === 'affiliate' ? null : (
+            <label className="admin-field">
+              <span>Hold period (hours)</span>
+              <input
+                type="number"
+                min={1}
+                value={form.holdHours}
+                onChange={(e) => update('holdHours', Number(e.target.value))}
+              />
+            </label>
+          )}
           <label className="admin-field">
             <span>Total spots</span>
             <input
@@ -215,6 +268,11 @@ export function CampaignForm({ initial, saving, onSubmit, onCancel }: CampaignFo
                 onChange={(e) => update('referralTarget', Number(e.target.value))}
               />
             </label>
+          ) : null}
+          {form.type === 'affiliate' ? (
+            <p className="admin-form-note admin-field-full">
+              Payout is per qualified player: deposit and play on the trading site.
+            </p>
           ) : null}
         </div>
       </section>

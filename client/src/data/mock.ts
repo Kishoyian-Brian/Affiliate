@@ -208,6 +208,47 @@ export const mockTasks: Task[] = [
     endAt: '2026-09-18T23:59:59Z',
     status: 'active',
   },
+  {
+    id: '49',
+    title: 'Affiliate AI AutoTrade',
+    shortDescription: 'Invite friends. Earn $40 when a friend deposits and plays.',
+    description:
+      'Invite friends to AI AutoTrade from Telegram. You earn $40 for each referred friend who deposits and actually plays. Signing up yourself does not pay the bonus — only a qualified referred player does.',
+    type: 'affiliate',
+    category: 'trading',
+    difficulty: 'medium',
+    channelUsername: 'aiautotrade',
+    channelTitle: 'AI AutoTrade',
+    channelMemberCount: 0,
+    channelDescription: 'AI-assisted trading platform. Deposit and play to qualify referrals.',
+    sponsorName: 'AI AutoTrade',
+    rewardAmount: 40,
+    rewardCurrency: 'USD',
+    rewardLabel: 'Per qualified player',
+    referralRewardPerUser: 40,
+    affiliateUrl: 'https://aiautotrade.trade',
+    holdHours: 0,
+    estimatedMinutes: 5,
+    slotsTotal: 1000,
+    slotsRemaining: 874,
+    requirements: {
+      mustStaySubscribed: false,
+      holdHours: 0,
+      newMembersOnly: true,
+      maxCompletionsPerUser: 99,
+    },
+    rules: [
+      'Tap Launch and confirm so the trading app opens inside Telegram.',
+      'Invite friends from Telegram — do not share a website URL.',
+      '$40 is paid only after a referred friend deposits and actually plays.',
+      'Self-referrals and duplicate accounts do not qualify.',
+      'Payout posts when the trading app confirms deposit and play.',
+    ],
+    tags: ['Affiliate', 'Trading', '$40'],
+    startAt: '2026-09-15T00:00:00Z',
+    endAt: '2026-12-31T23:59:59Z',
+    status: 'active',
+  },
 ]
 
 export const mockCompletions: Record<string, TaskCompletion> = {
@@ -235,6 +276,11 @@ export const mockCompletions: Record<string, TaskCompletion> = {
     status: 'not_started',
     rewardStatus: 'none',
   },
+  '49': {
+    taskId: '49',
+    status: 'not_started',
+    rewardStatus: 'none',
+  },
 }
 
 export const mockReferralProgress: Record<string, ReferralProgress> = {
@@ -245,6 +291,14 @@ export const mockReferralProgress: Record<string, ReferralProgress> = {
     pendingCount: 1,
     rejectedCount: 2,
     referralLink: 'https://t.me/YourAppBot?startapp=task46_ref582934721',
+  },
+  '49': {
+    taskId: '49',
+    target: 0,
+    verifiedCount: 0,
+    pendingCount: 0,
+    rejectedCount: 0,
+    referralLink: 'https://t.me/tasklane_bot/aiautotrade?startapp=ref582934721',
   },
 }
 
@@ -433,6 +487,15 @@ export const mockNotifications: AppNotification[] = [
     createdAt: '2026-09-12T11:20:00Z',
     read: false,
     href: '/app/tasks/46',
+  },
+  {
+    id: 'n4',
+    type: 'referral',
+    title: 'New affiliate campaign',
+    body: 'Share AI AutoTrade — earn $40 when a friend deposits and plays.',
+    createdAt: '2026-09-15T12:00:00Z',
+    read: false,
+    href: '/app/tasks/49',
   },
   {
     id: 'n3',

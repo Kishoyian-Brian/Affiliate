@@ -48,6 +48,8 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
         commands: [{ command: 'start', description: 'Open Tasklane and see how to earn' }],
       });
 
+      await this.setLaunchMenuButton();
+
       const webhookUrl = this.config.get<string>('telegramWebhookUrl') ?? '';
       if (webhookUrl) {
         await this.client.call('setWebhook', { url: webhookUrl });
@@ -86,6 +88,25 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     });
 
     return startMessageKeyboard(tasklaneUrl, channelUrl);
+  }
+
+  private async setLaunchMenuButton() {
+    const miniAppUrl = (this.config.get<string>('telegramMiniAppUrl') ?? '').replace(/\/+$/, '');
+    if (!miniAppUrl.startsWith('https://')) return;
+
+    try {
+      await this.client.call('setChatMenuButton', {
+        menu_button: {
+          type: 'web_app',
+          text: 'Launch',
+          web_app: { url: miniAppUrl },
+        },
+      });
+    } catch (error) {
+      this.logger.warn(
+        error instanceof Error ? error.message : 'Could not set Telegram Launch menu button',
+      );
+    }
   }
 
   private startPolling() {

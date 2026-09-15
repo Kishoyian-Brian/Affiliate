@@ -1,6 +1,7 @@
 import type { CompletionStatus, Task } from '../../types/task'
+import { getCampaignTargetLabel } from '../../lib/affiliate'
 import { formatMemberCount } from '../../lib/format'
-import { completionStatusLabels, taskTypeLabels } from '../../lib/task'
+import { completionStatusLabels, isAffiliateTask, taskTypeLabels } from '../../lib/task'
 import { TaskStatusBadge } from '../tasks/TaskStatusBadge'
 import { ChannelAvatar } from '../ui/ChannelAvatar'
 
@@ -15,7 +16,11 @@ export function CampaignHeader({ task, status }: CampaignHeaderProps) {
       <p className="page-eyebrow">{taskTypeLabels[task.type]}</p>
       <h1>{task.title}</h1>
       <p>
-        @{task.channelUsername} · {formatMemberCount(task.channelMemberCount)} ·{' '}
+        {getCampaignTargetLabel(task)}
+        {isAffiliateTask(task)
+          ? ' · Deposit + play'
+          : ` · ${formatMemberCount(task.channelMemberCount)}`}
+        {' · '}
         {completionStatusLabels[status]}
       </p>
       <div className="task-detail-summary-row" style={{ marginTop: 16 }}>

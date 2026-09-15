@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import type { RewardEntry } from '../../types/wallet'
 import type { WalletSummary } from '../../types/wallet'
 import { formatDateTime, formatMoney } from '../../lib/format'
+import { taskTypeLabels } from '../../lib/task'
 import { formatTimeRemaining } from '../../lib/time'
 import { RewardBadge } from '../ui/Badge'
 
@@ -48,9 +49,7 @@ export function EarningsSummary({ summary, rewards }: EarningsSummaryProps) {
               <article key={reward.id} className="pending-reward-item">
                 <div className="pending-reward-top">
                   <div>
-                    <span className="task-type-pill">
-                      {reward.taskType === 'referral' ? 'Referral' : 'Subscribe'}
-                    </span>
+                    <span className="task-type-pill">{taskTypeLabels[reward.taskType]}</span>
                     <h4>{reward.taskTitle}</h4>
                     {reward.note ? <p className="pending-reward-note">{reward.note}</p> : null}
                   </div>

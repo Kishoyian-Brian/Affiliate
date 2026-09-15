@@ -1,6 +1,7 @@
 import type { Task } from '../../types/task'
+import { getCampaignTargetLabel } from '../../lib/affiliate'
 import { daysLeft, formatDate, formatMemberCount, formatMoney } from '../../lib/format'
-import { categoryLabels, difficultyLabels, isSlotsLow } from '../../lib/task'
+import { categoryLabels, difficultyLabels, isAffiliateTask, isSlotsLow } from '../../lib/task'
 import { TaskProgress } from '../tasks/TaskProgress'
 
 interface CampaignProgressProps {
@@ -25,10 +26,17 @@ export function CampaignProgress({ task }: CampaignProgressProps) {
           <dt>Type</dt>
           <dd>{categoryLabels[task.category]}</dd>
         </div>
-        <div className="data-row">
-          <dt>Hold period</dt>
-          <dd>{task.holdHours} hours</dd>
-        </div>
+        {isAffiliateTask(task) ? (
+          <div className="data-row">
+            <dt>Pays when</dt>
+            <dd>Friend deposits and plays</dd>
+          </div>
+        ) : (
+          <div className="data-row">
+            <dt>Hold period</dt>
+            <dd>{task.holdHours} hours</dd>
+          </div>
+        )}
         <div className="data-row">
           <dt>Est. time</dt>
           <dd>{task.estimatedMinutes} minutes</dd>
@@ -38,9 +46,11 @@ export function CampaignProgress({ task }: CampaignProgressProps) {
           <dd>{difficultyLabels[task.difficulty]}</dd>
         </div>
         <div className="data-row">
-          <dt>Channel</dt>
+          <dt>{isAffiliateTask(task) ? 'Opens' : 'Channel'}</dt>
           <dd>
-            @{task.channelUsername} · {formatMemberCount(task.channelMemberCount)}
+            {isAffiliateTask(task)
+              ? 'Inside Telegram'
+              : `${getCampaignTargetLabel(task)} · ${formatMemberCount(task.channelMemberCount)}`}
           </dd>
         </div>
         <div className="data-row">
@@ -59,6 +69,12 @@ export function CampaignProgress({ task }: CampaignProgressProps) {
           <div className="data-row">
             <dt>Milestone</dt>
             <dd>{task.referralTarget} verified subscribers</dd>
+          </div>
+        ) : null}
+        {isAffiliateTask(task) ? (
+          <div className="data-row">
+            <dt>Payout</dt>
+            <dd>{formatMoney(task.rewardAmount, task.rewardCurrency)} per qualified player</dd>
           </div>
         ) : null}
       </dl>

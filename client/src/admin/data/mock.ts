@@ -8,7 +8,7 @@ import type {
 } from '../types'
 
 export const mockDashboard: DashboardStats = {
-  activeCampaigns: 3,
+  activeCampaigns: 4,
   verificationsToday: 24,
   pendingWithdrawals: 2,
   pendingHolds: 18,
@@ -178,6 +178,41 @@ export const mockCampaigns: AdminCampaign[] = [
     createdAt: '2026-09-14T08:00:00Z',
     updatedAt: '2026-09-14T08:00:00Z',
     stats: { started: 0, verified: 0, onHold: 0, completed: 0, failed: 0, cancelled: 0 },
+  },
+  {
+    id: '49',
+    title: 'Affiliate AI AutoTrade',
+    shortDescription: 'Invite friends. Earn $40 when a friend deposits and plays.',
+    description:
+      'CPA affiliate campaign for AI AutoTrade. Earners launch the trading Mini App inside Telegram. $40 is paid only when a referred friend deposits and actually plays.',
+    type: 'affiliate',
+    channelUsername: 'aiautotrade',
+    channelTitle: 'AI AutoTrade',
+    channelMemberCount: 0,
+    sponsorName: 'AI AutoTrade',
+    rewardAmount: 40,
+    rewardCurrency: 'USD',
+    affiliateUrl: 'https://aiautotrade.trade',
+    holdHours: 0,
+    slotsTotal: 1000,
+    slotsRemaining: 874,
+    requirements: {
+      mustStaySubscribed: false,
+      holdHours: 0,
+      newMembersOnly: true,
+      maxCompletionsPerUser: 99,
+    },
+    rules: [
+      'Launch the trading Mini App inside Telegram.',
+      '$40 posts only after a referred friend deposits and plays.',
+      'Self-referrals do not qualify.',
+    ],
+    status: 'active',
+    startAt: '2026-09-15T00:00:00Z',
+    endAt: '2026-12-31T23:59:59Z',
+    createdAt: '2026-09-15T10:00:00Z',
+    updatedAt: '2026-09-15T10:00:00Z',
+    stats: { started: 12, verified: 0, onHold: 0, completed: 0, failed: 0, cancelled: 0 },
   },
 ]
 

@@ -34,6 +34,15 @@ export const difficultyLabels: Record<TaskDifficulty, string> = {
 export const taskTypeLabels: Record<TaskType, string> = {
   subscribe: 'Subscribe',
   referral: 'Referral',
+  affiliate: 'Affiliate',
+}
+
+export function isAffiliateTask(task: Pick<Task, 'type'>) {
+  return task.type === 'affiliate'
+}
+
+export function isShareTask(task: Pick<Task, 'type'>) {
+  return task.type === 'referral' || task.type === 'affiliate'
 }
 
 export function getCompletionStatus(completion?: TaskCompletion) {

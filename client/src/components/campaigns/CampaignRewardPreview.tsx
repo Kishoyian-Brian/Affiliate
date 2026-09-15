@@ -1,5 +1,6 @@
 import type { Task } from '../../types/task'
 import { formatMoney } from '../../lib/format'
+import { isAffiliateTask } from '../../lib/task'
 
 export function CampaignRewardPreview({ task }: { task: Task }) {
   return (
@@ -9,8 +10,11 @@ export function CampaignRewardPreview({ task }: { task: Task }) {
         <small>{task.rewardLabel}</small>
       </div>
       <p className="helper-text">
-        Paid after Telegram verifies membership
-        {task.holdHours ? ` and a ${task.holdHours}-hour hold` : ''}.
+        {isAffiliateTask(task)
+          ? 'Paid when a referred friend deposits and actually plays on AI AutoTrade.'
+          : `Paid after Telegram verifies membership${
+              task.holdHours ? ` and a ${task.holdHours}-hour hold` : ''
+            }.`}
       </p>
     </section>
   )
