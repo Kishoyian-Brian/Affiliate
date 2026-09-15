@@ -7,6 +7,8 @@ export interface AppConfig {
   currency: string
   apiBaseUrl: string
   telegramBotUsername: string
+  telegramMiniAppUrl: string
+  telegramChannelUrl: string
 }
 
 const defaults: AppConfig = {
@@ -15,7 +17,10 @@ const defaults: AppConfig = {
   defaultHoldHours: 48,
   currency: 'USD',
   apiBaseUrl: import.meta.env.VITE_API_URL ?? 'http://localhost:3000',
-  telegramBotUsername: import.meta.env.VITE_TELEGRAM_BOT_USERNAME ?? 'WILLIAM_SMITH_EMPIR_BOT',
+  telegramBotUsername: import.meta.env.VITE_TELEGRAM_BOT_USERNAME ?? 'tasklane_bot',
+  telegramMiniAppUrl:
+    import.meta.env.VITE_TELEGRAM_MINI_APP_URL ?? 'https://client-psi-six-83.vercel.app',
+  telegramChannelUrl: import.meta.env.VITE_TELEGRAM_CHANNEL_URL ?? 'https://t.me/TasklaneSupport',
 }
 
 const AppConfigContext = createContext<AppConfig>(defaults)

@@ -7,3 +7,6 @@ alwaysApply: true
 
 - Opening Tasklane **inside Telegram** always goes to the Mini App (`/app`), never the marketing landing page.
 - The earner profile is the Telegram account: show `@username` when the user has one, otherwise their Telegram first name. Do not keep mock names like Brian on the live Mini App profile.
+- The bot `/start` welcome is Tasklane-branded (never DLC) and has two stacked buttons: **Open Tasklane** on top, **Open Channel** below.
+- Button URLs come from env: `TELEGRAM_MINI_APP_URL` (Tasklane Mini App) and `TELEGRAM_CHANNEL_URL` (channel). Do not hardcode DLC or old bot links.
+- The Telegram bot username is `@tasklane_bot`. Keep `TELEGRAM_BOT_TOKEN` in sync with that bot; an old or revoked token means Start shows nothing.

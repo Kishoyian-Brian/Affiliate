@@ -17,6 +17,26 @@ export class EnvironmentVariables {
 
   @IsOptional()
   @IsString()
+  TELEGRAM_BOT_USERNAME: string = 'tasklane_bot';
+
+  @IsOptional()
+  @IsString()
+  TELEGRAM_CHANNEL_USERNAME: string = 'TasklaneSupport';
+
+  @IsOptional()
+  @IsString()
+  TELEGRAM_CHANNEL_URL: string = '';
+
+  @IsOptional()
+  @IsString()
+  TELEGRAM_WEBHOOK_URL: string = '';
+
+  @IsOptional()
+  @IsString()
+  TELEGRAM_MINI_APP_URL: string = 'https://client-psi-six-83.vercel.app';
+
+  @IsOptional()
+  @IsString()
   CLIENT_ORIGIN: string = 'http://localhost:5173';
 
   @IsOptional()

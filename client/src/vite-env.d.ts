@@ -3,6 +3,8 @@
 interface ImportMetaEnv {
   readonly VITE_API_URL?: string
   readonly VITE_TELEGRAM_BOT_USERNAME?: string
+  readonly VITE_TELEGRAM_MINI_APP_URL?: string
+  readonly VITE_TELEGRAM_CHANNEL_URL?: string
 }
 
 interface ImportMeta {

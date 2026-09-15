@@ -1,7 +1,13 @@
 import WebApp from '@twa-dev/sdk'
 
 export const TELEGRAM_BOT_USERNAME =
-  import.meta.env.VITE_TELEGRAM_BOT_USERNAME ?? 'WILLIAM_SMITH_EMPIR_BOT'
+  import.meta.env.VITE_TELEGRAM_BOT_USERNAME ?? 'tasklane_bot'
+
+export const TELEGRAM_MINI_APP_URL =
+  import.meta.env.VITE_TELEGRAM_MINI_APP_URL ?? 'https://client-psi-six-83.vercel.app'
+
+export const TELEGRAM_CHANNEL_URL =
+  import.meta.env.VITE_TELEGRAM_CHANNEL_URL ?? 'https://t.me/TasklaneSupport'
 
 export interface TelegramUser {
   id: number
@@ -57,6 +63,11 @@ export function getTelegramBotUrl() {
 
 /** Opens the Mini App through the bot. Use this for website CTAs. */
 export function getTelegramMiniAppUrl(startParam?: string) {
+  const configured = TELEGRAM_MINI_APP_URL.replace(/\/+$/, '')
+  if (configured.startsWith('https://') && !startParam) {
+    return configured
+  }
+
   const base = getTelegramBotUrl()
   if (startParam) {
     return `${base}?startapp=${encodeURIComponent(startParam)}`
