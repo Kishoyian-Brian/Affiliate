@@ -1,6 +1,6 @@
 import { ServiceUnavailableException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../database/prisma.service';
 import { TelegramService } from '../telegram/telegram.service';
 import { HealthController } from './health.controller';
 import { HealthService } from './health.service';
