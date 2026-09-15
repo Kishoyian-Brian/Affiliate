@@ -58,21 +58,23 @@ export function isTelegramWebApp() {
 }
 
 export function getTelegramBotUrl() {
-  return `https://t.me/${TELEGRAM_BOT_USERNAME}`
+  const fromEnv = import.meta.env.VITE_TELEGRAM_BOT_URL?.replace(/\/+$/, '')
+  if (fromEnv?.startsWith('https://t.me/')) return fromEnv
+  return `https://t.me/${TELEGRAM_BOT_USERNAME.replace(/^@/, '')}`
 }
 
-/** Opens the Mini App through the bot. Use this for website CTAs. */
-export function getTelegramMiniAppUrl(startParam?: string) {
-  const configured = TELEGRAM_MINI_APP_URL.replace(/\/+$/, '')
-  if (configured.startsWith('https://') && !startParam) {
-    return configured
-  }
-
+/** Website CTAs open the Telegram bot chat, not the hosted Mini App URL. */
+export function getTelegramBotLaunchUrl(startParam?: string) {
   const base = getTelegramBotUrl()
   if (startParam) {
     return `${base}?startapp=${encodeURIComponent(startParam)}`
   }
-  return `${base}?startapp`
+  return base
+}
+
+/** Hosted Mini App URL from env. Used by the bot Open Tasklane button, not landing CTAs. */
+export function getTelegramMiniAppUrl(startParam?: string) {
+  return getTelegramBotLaunchUrl(startParam)
 }
 
 export function initTelegramApp() {

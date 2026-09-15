@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
-import { getTelegramMiniAppUrl } from '../../lib/telegram'
+import { getTelegramBotLaunchUrl } from '../../lib/telegram'
 
 interface TelegramLaunchLinkProps {
   children: ReactNode
@@ -21,7 +21,7 @@ export function TelegramLaunchLink({ children, className, style }: TelegramLaunc
   }
 
   return (
-    <a className={className} href={getTelegramMiniAppUrl()} style={style}>
+    <a className={className} href={getTelegramBotLaunchUrl()} style={style} rel="noopener noreferrer">
       {children}
     </a>
   )
