@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { AdminApp } from './admin/AdminApp'
 import { ReferralBootstrap } from './components/ReferralBootstrap'
 import { AppShell } from './components/layout/AppShell'
 import { HomePage } from './pages/HomePage'
@@ -21,6 +22,7 @@ function App() {
           <Route path="wallet" element={<WalletPage />} />
           <Route path="profile" element={<ProfilePage />} />
         </Route>
+        <Route path="/admin/*" element={<AdminApp />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
