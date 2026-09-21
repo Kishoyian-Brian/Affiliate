@@ -4,6 +4,7 @@ export type NotificationType =
   | 'verification_failed'
   | 'withdrawal'
   | 'referral'
+  | 'system'
 
 export interface AppNotification {
   id: string

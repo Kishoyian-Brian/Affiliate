@@ -7,6 +7,7 @@ import { TelegramRedirect } from './components/layout/TelegramRedirect'
 import { AppConfigProvider } from './context/AppConfigContext'
 import { AuthProvider } from './context/AuthContext'
 import { ToastProvider } from './context/ToastContext'
+import { TonConnectProvider } from './context/TonConnectProvider'
 import { HomePage } from './pages/HomePage'
 import { LandingPage } from './pages/LandingPage'
 import { LeaderboardPage } from './pages/LeaderboardPage'
@@ -21,34 +22,36 @@ function App() {
   return (
     <AppConfigProvider>
       <AuthProvider>
-        <ToastProvider>
-          <BrowserRouter>
-            <TelegramRedirect />
-            <ReferralBootstrap />
-            <Routes>
-              <Route index element={<LandingPage />} />
-              <Route path="/start" element={<ReferralLandingPage />} />
-              <Route
-                path="/app"
-                element={
-                  <ProtectedRoute>
-                    <AppShell />
-                  </ProtectedRoute>
-                }
-              >
-                <Route index element={<HomePage />} />
-                <Route path="tasks/:taskId" element={<TaskDetailPage />} />
-                <Route path="leaderboard" element={<LeaderboardPage />} />
-                <Route path="wallet" element={<WalletPage />} />
-                <Route path="notifications" element={<NotificationsPage />} />
-                <Route path="profile" element={<ProfilePage />} />
+        <TonConnectProvider>
+          <ToastProvider>
+            <BrowserRouter>
+              <TelegramRedirect />
+              <ReferralBootstrap />
+              <Routes>
+                <Route index element={<LandingPage />} />
+                <Route path="/start" element={<ReferralLandingPage />} />
+                <Route
+                  path="/app"
+                  element={
+                    <ProtectedRoute>
+                      <AppShell />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route index element={<HomePage />} />
+                  <Route path="tasks/:taskId" element={<TaskDetailPage />} />
+                  <Route path="leaderboard" element={<LeaderboardPage />} />
+                  <Route path="wallet" element={<WalletPage />} />
+                  <Route path="notifications" element={<NotificationsPage />} />
+                  <Route path="profile" element={<ProfilePage />} />
+                  <Route path="*" element={<NotFoundPage />} />
+                </Route>
+                <Route path="/admin/*" element={<AdminApp />} />
                 <Route path="*" element={<NotFoundPage />} />
-              </Route>
-              <Route path="/admin/*" element={<AdminApp />} />
-              <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-          </BrowserRouter>
-        </ToastProvider>
+              </Routes>
+            </BrowserRouter>
+          </ToastProvider>
+        </TonConnectProvider>
       </AuthProvider>
     </AppConfigProvider>
   )

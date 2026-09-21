@@ -1,14 +1,14 @@
 import { Controller, Get } from '@nestjs/common';
-import { Public } from '../common/decorators/public.decorator';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import type { AuthUser } from '../common/types/auth-user.type';
 import { LeaderboardsService } from './leaderboards.service';
 
 @Controller('leaderboards')
 export class LeaderboardsController {
   constructor(private readonly leaderboards: LeaderboardsService) {}
 
-  @Public()
   @Get()
-  findAll() {
-    return this.leaderboards.findAll();
+  findAll(@CurrentUser() user: AuthUser) {
+    return this.leaderboards.findAll(user.id);
   }
 }

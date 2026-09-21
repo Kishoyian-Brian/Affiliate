@@ -21,6 +21,7 @@ enum BotAccessStatus {
 enum CampaignType {
   subscribe
   referral
+  affiliate
 }
 
 enum CampaignStatus {
@@ -70,6 +71,15 @@ enum WithdrawalStatus {
   rejected
 }
 
+enum NotificationType {
+  reward_held
+  reward_released
+  verification_failed
+  withdrawal
+  referral
+  system
+}
+
 model AdminUser {
   id           String   @id @default(cuid())
   name         String
@@ -82,21 +92,41 @@ model AdminUser {
 }
 
 model User {
-  id          String     @id @default(cuid())
-  telegramId  BigInt     @unique @map("telegram_id")
-  username    String?
-  displayName String     @map("display_name")
-  status      UserStatus @default(active)
-  createdAt   DateTime   @default(now()) @map("created_at")
-  updatedAt   DateTime   @updatedAt @map("updated_at")
+  id             String     @id @default(cuid())
+  telegramId     BigInt     @unique @map("telegram_id")
+  username       String?
+  displayName    String     @map("display_name")
+  status         UserStatus @default(active)
+  tonAddress     String?    @map("ton_address")
+  tonNetwork     String?    @map("ton_network")
+  tonPublicKey   String?    @map("ton_public_key")
+  tonWalletApp   String?    @map("ton_wallet_app")
+  tonConnectedAt DateTime?  @map("ton_connected_at")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
 
   completions         Completion[]
   referralsMade       Referral[]     @relation("Referrer")
   referralsAsReferred Referral[]     @relation("Referred")
   ledgerEntries       LedgerEntry[]
   withdrawals         Withdrawal[]
+  tonProofNonces      TonProofNonce[]
+  notifications       Notification[]
 
   @@map("users")
+}
+
+model TonProofNonce {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payload   String    @unique
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@index([userId, expiresAt])
+  @@map("ton_proof_nonces")
 }
 
 model Channel {
@@ -129,6 +159,7 @@ model Campaign {
   holdHours        Int            @map("hold_hours")
   slotsTotal       Int            @map("slots_total")
   referralTarget   Int?           @map("referral_target")
+  affiliateUrl     String?        @map("affiliate_url")
   requirements     Json
   rules            String[]
   status           CampaignStatus @default(draft)
@@ -224,4 +255,20 @@ model Withdrawal {
 
   @@index([status, requestedAt])
   @@map("withdrawals")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String           @map("user_id")
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  body      String
+  href      String?
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  @@index([userId, createdAt])
+  @@index([userId, read])
+  @@map("notifications")
 }

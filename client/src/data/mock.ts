@@ -11,13 +11,13 @@ export const mockUser: UserProfile = {
   telegramId: 582934721,
   firstName: 'Brian',
   username: 'brian',
-  balance: 12.5,
-  pendingBalance: 6.0,
+  balance: 0,
+  pendingBalance: 0,
   currency: 'USD',
-  completedTasks: 4,
-  activeReferrals: 1,
+  completedTasks: 0,
+  activeReferrals: 0,
   memberSince: '2026-08-15T10:00:00Z',
-  totalEarned: 20.25,
+  totalEarned: 0,
   accountStatus: 'active',
   language: 'English',
 }
@@ -394,16 +394,17 @@ export const mockWithdrawals: WithdrawalEntry[] = [
 
 export const mockWallet: WalletData = {
   summary: {
-    availableBalance: 12.5,
-    pendingBalance: 6.0,
-    lifetimeEarned: 20.25,
-    lifetimeWithdrawn: 10,
+    availableBalance: 0,
+    pendingBalance: 0,
+    lifetimeEarned: 0,
+    lifetimeWithdrawn: 0,
     currency: 'USD',
     minWithdrawal: 5,
     withdrawalFeePct: 2,
   },
-  rewards: mockRewards,
-  withdrawals: mockWithdrawals,
+  connectedWallet: null,
+  rewards: [],
+  withdrawals: [],
 }
 
 export const mockReferralHistory: ReferralRecord[] = [

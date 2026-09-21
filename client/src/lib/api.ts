@@ -5,21 +5,51 @@ import type { AppNotification } from '../types/notification'
 import type { ProfileData } from '../types/user'
 import type { ReferralProgress, ReferralRecord } from '../types/referral'
 import type { Task, TaskCompletion } from '../types/task'
-import type { WalletData } from '../types/wallet'
+import type { ConnectedWallet, WalletData } from '../types/wallet'
 import type { PayoutMethod } from '../types/withdrawal'
 import { ApiError } from './errors'
-import {
-  mockCompletions,
-  mockLeaderboard,
-  mockNotifications,
-  mockProfile,
-  mockReferralHistory,
-  mockReferralProgress,
-  mockTasks,
-  mockWallet,
-} from '../data/mock'
+import { getAccessToken } from './auth'
 
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
+
+function authHeaders(extra?: HeadersInit): HeadersInit {
+  const token = getAccessToken()
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...extra,
+  }
+}
+
+async function parseError(response: Response, fallback: string) {
+  try {
+    const body = (await response.json()) as { message?: string | string[] }
+    if (Array.isArray(body.message)) return body.message.join(', ')
+    if (typeof body.message === 'string') return body.message
+  } catch {
+    /* ignore */
+  }
+  return fallback
+}
+
+async function requireAuthFetch(path: string, init?: RequestInit, fallback = 'Request failed') {
+  const token = getAccessToken()
+  if (!token) {
+    throw new ApiError('Sign in through Telegram to continue')
+  }
+
+  const response = await fetch(`${API_BASE}${path}`, {
+    ...init,
+    headers: authHeaders(init?.headers),
+  })
+
+  if (!response.ok) {
+    throw new ApiError(await parseError(response, fallback))
+  }
+
+  if (response.status === 204) return undefined
+  return response.json()
+}
 
 export async function telegramLogin(initData: string): Promise<TelegramAuthTokens> {
   const response = await fetch(`${API_BASE}/api/v1/auth/telegram`, {
@@ -29,90 +59,71 @@ export async function telegramLogin(initData: string): Promise<TelegramAuthToken
   })
 
   if (!response.ok) {
-    throw new ApiError('Could not verify Telegram login')
+    throw new ApiError(await parseError(response, 'Could not verify Telegram login'))
   }
 
   return (await response.json()) as TelegramAuthTokens
 }
 
-function delay(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
 export async function fetchTasks(): Promise<Task[]> {
-  await delay(400)
-  return mockTasks
+  const response = await fetch(`${API_BASE}/api/v1/campaigns?status=active`, {
+    headers: authHeaders(),
+  })
+
+  if (!response.ok) {
+    throw new ApiError(await parseError(response, 'Could not load campaigns'))
+  }
+
+  return (await response.json()) as Task[]
 }
 
 export async function fetchTask(taskId: string): Promise<Task | undefined> {
-  await delay(300)
-  return mockTasks.find((task) => task.id === taskId)
+  const response = await fetch(`${API_BASE}/api/v1/campaigns/${taskId}`, {
+    headers: authHeaders(),
+  })
+
+  if (response.status === 404) return undefined
+
+  if (!response.ok) {
+    throw new ApiError(await parseError(response, 'Could not load campaign'))
+  }
+
+  return (await response.json()) as Task
 }
 
 export async function fetchCompletion(taskId: string): Promise<TaskCompletion | undefined> {
-  await delay(200)
-  return mockCompletions[taskId]
+  const data = (await requireAuthFetch(
+    `/api/v1/tasks/me/completions/${encodeURIComponent(taskId)}`,
+    undefined,
+    'Could not load completion',
+  )) as TaskCompletion | null
+
+  return data ?? undefined
 }
 
 export async function fetchAllCompletions(): Promise<Record<string, TaskCompletion>> {
-  await delay(200)
-  return { ...mockCompletions }
+  const token = getAccessToken()
+  if (!token) return {}
+
+  return (await requireAuthFetch(
+    '/api/v1/tasks/me/completions',
+    undefined,
+    'Could not load completions',
+  )) as Record<string, TaskCompletion>
 }
 
 export async function verifySubscription(
   taskId: string,
   _initData: string,
 ): Promise<VerifySubscriptionResult> {
-  await delay(1200)
-
-  const task = mockTasks.find((item) => item.id === taskId)
-
-  if (task?.type === 'affiliate') {
-    mockCompletions[taskId] = {
-      taskId,
-      status: 'awaiting_verification',
-      rewardStatus: 'none',
-    }
-    return {
-      success: true,
-      completionStatus: 'awaiting_verification',
-      rewardStatus: 'none',
-      message:
-        '$40 is credited when the trading app confirms a referred friend deposited and played.',
-    }
-  }
-
-  const random = Math.random()
-  if (random < 0.15) {
-    return {
-      success: false,
-      completionStatus: 'failed',
-      rewardStatus: 'none',
-      message: 'We could not confirm your subscription. Join the channel first, then try again.',
-    }
-  }
-
-  const holdReleaseAt = task
-    ? new Date(Date.now() + task.holdHours * 60 * 60 * 1000).toISOString()
-    : undefined
-
-  mockCompletions[taskId] = {
-    taskId,
-    status: 'verified_pending',
-    rewardStatus: 'held',
-    verifiedAt: new Date().toISOString(),
-    holdReleaseAt,
-  }
-
-  return {
-    success: true,
-    completionStatus: 'verified_pending',
-    rewardStatus: 'held',
-    holdReleaseAt,
-    message: task
-      ? `Verified! Reward unlocks after ${task.holdHours} hours if you stay subscribed.`
-      : 'Verified! Your reward is pending.',
-  }
+  return (await requireAuthFetch(
+    '/api/v1/tasks/verify',
+    {
+      method: 'POST',
+      body: JSON.stringify({ campaignId: taskId }),
+    },
+    'Could not verify subscription',
+  )) as VerifySubscriptionResult
 }
 
 export async function registerReferral(
@@ -120,38 +131,107 @@ export async function registerReferral(
   referrerId: string,
   _initData: string,
 ): Promise<void> {
-  await delay(200)
-  console.info('Referral registered', { taskId, referrerId })
+  if (!taskId || !referrerId) return
+
+  try {
+    await requireAuthFetch(
+      '/api/v1/referrals',
+      {
+        method: 'POST',
+        body: JSON.stringify({ campaignId: taskId, referrerId }),
+      },
+      'Could not register referral',
+    )
+  } catch {
+    // Deep-link bootstrap should still open the task if attribution fails.
+  }
 }
 
 export async function fetchReferralProgress(taskId: string): Promise<ReferralProgress | undefined> {
-  await delay(200)
-  return mockReferralProgress[taskId]
+  return (await requireAuthFetch(
+    `/api/v1/referrals/progress?campaignId=${encodeURIComponent(taskId)}`,
+    undefined,
+    'Could not load referral progress',
+  )) as ReferralProgress
 }
 
 export async function fetchReferralHistory(taskId: string): Promise<ReferralRecord[]> {
-  await delay(200)
-  return mockReferralHistory.filter((item) => item.taskId === taskId)
+  return (await requireAuthFetch(
+    `/api/v1/referrals/history?campaignId=${encodeURIComponent(taskId)}`,
+    undefined,
+    'Could not load referral history',
+  )) as ReferralRecord[]
 }
 
 export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
-  await delay(300)
-  return mockLeaderboard.map((entry) => ({ ...entry }))
+  return (await requireAuthFetch(
+    '/api/v1/leaderboards',
+    undefined,
+    'Could not load leaderboard',
+  )) as LeaderboardEntry[]
 }
 
 export async function fetchNotifications(): Promise<AppNotification[]> {
-  await delay(250)
-  return mockNotifications.map((item) => ({ ...item }))
+  return (await requireAuthFetch(
+    '/api/v1/notifications',
+    undefined,
+    'Could not load notifications',
+  )) as AppNotification[]
 }
 
 export async function fetchProfile(): Promise<ProfileData> {
-  await delay(300)
-  return structuredClone(mockProfile)
+  return (await requireAuthFetch(
+    '/api/v1/users/me',
+    undefined,
+    'Could not load profile',
+  )) as ProfileData
 }
 
 export async function fetchWallet(): Promise<WalletData> {
-  await delay(400)
-  return structuredClone(mockWallet)
+  return (await requireAuthFetch(
+    '/api/v1/wallets/me',
+    undefined,
+    'Could not load wallet',
+  )) as WalletData
+}
+
+export async function createTonProofPayload(): Promise<{ payload: string; expiresAt: string }> {
+  return (await requireAuthFetch(
+    '/api/v1/wallets/ton-proof/payload',
+    { method: 'POST' },
+    'Could not start wallet proof',
+  )) as { payload: string; expiresAt: string }
+}
+
+export async function connectTonWallet(body: {
+  address: string
+  network: string
+  publicKey: string
+  proof: {
+    timestamp: number
+    domain: { lengthBytes: number; value: string }
+    signature: string
+    payload: string
+    state_init?: string
+  }
+  walletApp?: string
+}): Promise<ConnectedWallet> {
+  return (await requireAuthFetch(
+    '/api/v1/wallets/connect/ton',
+    {
+      method: 'POST',
+      body: JSON.stringify(body),
+    },
+    'Could not bind TON wallet',
+  )) as ConnectedWallet
+}
+
+export async function disconnectTonWallet(): Promise<void> {
+  await requireAuthFetch(
+    '/api/v1/wallets/connect/ton',
+    { method: 'DELETE' },
+    'Could not disconnect wallet',
+  )
 }
 
 export async function requestWithdrawal(
@@ -159,38 +239,16 @@ export async function requestWithdrawal(
   method: PayoutMethod,
   destination: string,
 ): Promise<WalletData> {
-  await delay(800)
+  await requireAuthFetch(
+    '/api/v1/withdrawals',
+    {
+      method: 'POST',
+      body: JSON.stringify({ amount, method, destination }),
+    },
+    'Withdrawal failed',
+  )
 
-  const { summary } = mockWallet
-
-  if (amount < summary.minWithdrawal) {
-    throw new ApiError(`Minimum withdrawal is ${summary.minWithdrawal} ${summary.currency}`)
-  }
-
-  if (amount > summary.availableBalance) {
-    throw new ApiError('Insufficient available balance')
-  }
-
-  if (!destination.trim()) {
-    throw new ApiError('Enter a payout destination')
-  }
-
-  const fee = Math.round(amount * (summary.withdrawalFeePct / 100) * 100) / 100
-
-  mockWallet.summary.availableBalance = Math.round((summary.availableBalance - amount) * 100) / 100
-  mockWallet.summary.lifetimeWithdrawn = Math.round((summary.lifetimeWithdrawn + amount) * 100) / 100
-  mockWallet.withdrawals.unshift({
-    id: `w${Date.now()}`,
-    amount,
-    currency: summary.currency,
-    method,
-    status: 'pending',
-    destination: destination.trim(),
-    requestedAt: new Date().toISOString(),
-    fee,
-  })
-
-  return structuredClone(mockWallet)
+  return fetchWallet()
 }
 
 export function getApiBaseUrl() {

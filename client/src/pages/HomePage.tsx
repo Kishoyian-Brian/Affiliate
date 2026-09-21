@@ -35,7 +35,7 @@ export function HomePage() {
         <p>
           {loading
             ? 'Loading…'
-            : `${campaigns.length} open campaign${campaigns.length === 1 ? '' : 's'} · Verified via Telegram`}
+            : `${campaigns.length} open campaign${campaigns.length === 1 ? '' : 's'}`}
         </p>
       </header>
 

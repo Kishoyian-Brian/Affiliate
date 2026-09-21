@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useTelegram } from '../hooks/useTelegram'
 import { telegramLogin } from '../lib/api'
 import { storeEarnerSession } from '../lib/auth'
@@ -8,20 +8,34 @@ interface AuthContextValue {
   ready: boolean
   user: UserProfile | null
   initData: string
+  accessToken: string | null
   isAuthenticated: boolean
+  hasServerSession: boolean
   isInsideTelegram: boolean
+  authError: string | null
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { ready: telegramReady, user, initData, isInsideTelegram } = useTelegram()
+  const [accessToken, setAccessToken] = useState<string | null>(null)
+  const [authError, setAuthError] = useState<string | null>(null)
+  const [loginReady, setLoginReady] = useState(false)
 
   useEffect(() => {
     if (!telegramReady) return
-    if (!isInsideTelegram || !initData || !user) return
+
+    if (!isInsideTelegram || !initData || !user) {
+      setAccessToken(null)
+      setAuthError(null)
+      setLoginReady(true)
+      return
+    }
 
     let cancelled = false
+    setLoginReady(false)
+    setAuthError(null)
 
     void telegramLogin(initData)
       .then((tokens) => {
@@ -32,10 +46,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           accessToken: tokens.accessToken,
           refreshToken: tokens.refreshToken,
         })
+        setAccessToken(tokens.accessToken)
+        setLoginReady(true)
       })
-      .catch(() => {
+      .catch((error: unknown) => {
         if (cancelled) return
         storeEarnerSession({ user, initData })
+        setAccessToken(null)
+        setAuthError(error instanceof Error ? error.message : 'Could not verify Telegram login')
+        setLoginReady(true)
       })
 
     return () => {
@@ -45,13 +64,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(
     () => ({
-      ready: telegramReady,
+      ready: telegramReady && loginReady,
       user,
       initData,
+      accessToken,
       isAuthenticated: Boolean(isInsideTelegram && user),
+      hasServerSession: Boolean(accessToken),
       isInsideTelegram,
+      authError,
     }),
-    [initData, isInsideTelegram, telegramReady, user],
+    [accessToken, authError, initData, isInsideTelegram, loginReady, telegramReady, user],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

@@ -18,8 +18,32 @@ async function bootstrap() {
   const config = app.get(ConfigService);
 
   app.setGlobalPrefix('api/v1');
+
+  const allowedOrigins = new Set(
+    [
+      config.get<string>('clientOrigin'),
+      config.get<string>('telegramMiniAppUrl'),
+      'http://localhost:5173',
+      'https://localhost:5173',
+    ]
+      .filter(Boolean)
+      .map((value) => {
+        try {
+          return new URL(value!).origin;
+        } catch {
+          return value!.replace(/\/+$/, '');
+        }
+      }),
+  );
+
   app.enableCors({
-    origin: config.get<string>('clientOrigin') ?? 'http://localhost:5173',
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.has(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(null, false);
+    },
     credentials: true,
   });
   app.useGlobalPipes(createValidationPipe());

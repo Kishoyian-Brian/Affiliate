@@ -1,4 +1,5 @@
 export interface UserProfile {
+  id?: string
   telegramId: number
   firstName: string
   lastName?: string
@@ -12,6 +13,8 @@ export interface UserProfile {
   totalEarned: number
   accountStatus: 'active' | 'restricted' | 'pending'
   language: string
+  tonAddress?: string
+  tonConnectedAt?: string
 }
 
 export interface ProfileActivityItem {

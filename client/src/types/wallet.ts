@@ -29,8 +29,16 @@ export interface WalletSummary {
   withdrawalFeePct: number
 }
 
+export interface ConnectedWallet {
+  address: string
+  network: string
+  walletApp?: string
+  connectedAt: string | null
+}
+
 export interface WalletData {
   summary: WalletSummary
+  connectedWallet: ConnectedWallet | null
   rewards: RewardEntry[]
   withdrawals: WithdrawalEntry[]
 }

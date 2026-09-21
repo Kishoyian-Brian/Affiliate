@@ -16,6 +16,22 @@ export class ReferralsController {
     return this.referrals.register(user.id, dto);
   }
 
+  @Get('progress')
+  progress(
+    @CurrentUser() user: AuthUser,
+    @Query('campaignId') campaignId: string,
+  ) {
+    return this.referrals.progress(user.id, campaignId);
+  }
+
+  @Get('history')
+  history(
+    @CurrentUser() user: AuthUser,
+    @Query('campaignId') campaignId: string,
+  ) {
+    return this.referrals.history(user.id, campaignId);
+  }
+
   @Roles(Role.Admin)
   @Get()
   findAll(@Query() filter: ReferralFilterDto) {

@@ -8,6 +8,7 @@ import { PayoutMethodCard, payoutMethodMeta } from './PayoutMethodCard'
 
 interface WithdrawalFormProps {
   summary: WalletSummary
+  connectedTonAddress: string | null
   withdrawing: boolean
   onWithdraw: (
     amount: number,
@@ -16,7 +17,12 @@ interface WithdrawalFormProps {
   ) => Promise<{ success: boolean; message?: string }>
 }
 
-export function WithdrawalForm({ summary, withdrawing, onWithdraw }: WithdrawalFormProps) {
+export function WithdrawalForm({
+  summary,
+  connectedTonAddress,
+  withdrawing,
+  onWithdraw,
+}: WithdrawalFormProps) {
   const { toast } = useToast()
   const [method, setMethod] = useState<PayoutMethod>('ton')
   const [amount, setAmount] = useState('')
@@ -25,17 +31,23 @@ export function WithdrawalForm({ summary, withdrawing, onWithdraw }: WithdrawalF
   const parsedAmount = Number.parseFloat(amount) || 0
   const fee = Math.round(parsedAmount * (summary.withdrawalFeePct / 100) * 100) / 100
   const net = Math.max(0, parsedAmount - fee)
+  const tonReady = Boolean(connectedTonAddress)
+  const destinationReady = method === 'ton' ? tonReady : destination.trim().length > 0
   const canWithdraw =
     parsedAmount >= summary.minWithdrawal &&
     parsedAmount <= summary.availableBalance &&
-    destination.trim().length > 0
+    destinationReady
 
   const selectedMethod = payoutMethodMeta(method)
 
   async function handleSubmit() {
     haptic('medium')
 
-    const result = await onWithdraw(parsedAmount, method, destination)
+    const result = await onWithdraw(
+      parsedAmount,
+      method,
+      method === 'ton' ? connectedTonAddress ?? '' : destination,
+    )
 
     if (result.success) {
       haptic('success')
@@ -86,15 +98,26 @@ export function WithdrawalForm({ summary, withdrawing, onWithdraw }: WithdrawalF
         </div>
       </label>
 
-      <label className="withdraw-field">
-        <span>{selectedMethod.label} destination</span>
-        <input
-          type="text"
-          value={destination}
-          onChange={(e) => setDestination(e.target.value)}
-          placeholder={selectedMethod.placeholder}
-        />
-      </label>
+      {method === 'ton' ? (
+        <div className="withdraw-field">
+          <span>TON destination</span>
+          <p className="withdraw-bound-destination">
+            {connectedTonAddress
+              ? `Pays to your connected wallet (${connectedTonAddress.slice(0, 6)}…${connectedTonAddress.slice(-4)})`
+              : 'Connect a TON wallet above before withdrawing.'}
+          </p>
+        </div>
+      ) : (
+        <label className="withdraw-field">
+          <span>{selectedMethod.label} destination</span>
+          <input
+            type="text"
+            value={destination}
+            onChange={(e) => setDestination(e.target.value)}
+            placeholder={selectedMethod.placeholder}
+          />
+        </label>
+      )}
 
       {parsedAmount > 0 ? (
         <div className="withdraw-summary">

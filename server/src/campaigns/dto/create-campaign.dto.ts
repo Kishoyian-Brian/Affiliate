@@ -11,7 +11,7 @@ export class CreateCampaignDto {
   description!: string;
 
   @IsString()
-  type!: 'subscribe' | 'referral';
+  type!: 'subscribe' | 'referral' | 'affiliate';
 
   @IsString()
   channelUsername!: string;

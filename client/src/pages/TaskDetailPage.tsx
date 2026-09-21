@@ -9,7 +9,6 @@ import { ReferralStats } from '../components/referrals/ReferralStats'
 import { TaskRequirement } from '../components/tasks/TaskRequirement'
 import { TaskSteps } from '../components/tasks/TaskSteps'
 import { TaskVerification } from '../components/tasks/TaskVerification'
-import { mockUser } from '../data/mock'
 import { useAuth } from '../hooks/useAuth'
 import { useReferrals } from '../hooks/useReferrals'
 import { useTaskDetail } from '../hooks/useTasks'
@@ -28,10 +27,10 @@ export function TaskDetailPage() {
 
   const status = completion?.status ?? 'not_started'
   const affiliate = task ? isAffiliateTask(task) : false
-  const telegramId = user?.telegramId ?? mockUser.telegramId
+  const telegramId = user?.telegramId
 
   const affiliateLaunchUrl = useMemo(() => {
-    if (!affiliate) return ''
+    if (!affiliate || !telegramId) return ''
     return buildAffiliateMiniAppLink(TELEGRAM_BOT_USERNAME, telegramId)
   }, [affiliate, telegramId])
 

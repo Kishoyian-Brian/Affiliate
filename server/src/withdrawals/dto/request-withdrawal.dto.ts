@@ -1,4 +1,4 @@
-import { IsIn, IsNumber, IsString, Min } from 'class-validator';
+import { IsIn, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class RequestWithdrawalDto {
   @IsNumber()
@@ -9,6 +9,7 @@ export class RequestWithdrawalDto {
   @IsIn(['ton', 'usdt', 'telegram_stars'])
   method!: 'ton' | 'usdt' | 'telegram_stars';
 
+  @IsOptional()
   @IsString()
-  destination!: string;
+  destination?: string;
 }

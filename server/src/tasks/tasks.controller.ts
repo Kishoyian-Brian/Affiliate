@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { Public } from '../common/decorators/public.decorator';
 import type { AuthUser } from '../common/types/auth-user.type';
@@ -15,6 +15,19 @@ export class TasksController {
   @Get()
   findAll(@Query() filter: TaskFilterDto) {
     return this.tasks.findAll(filter);
+  }
+
+  @Get('me/completions')
+  myCompletions(@CurrentUser() user: AuthUser) {
+    return this.tasks.myCompletions(user.id);
+  }
+
+  @Get('me/completions/:campaignId')
+  completionForCampaign(
+    @CurrentUser() user: AuthUser,
+    @Param('campaignId') campaignId: string,
+  ) {
+    return this.tasks.completionForCampaign(user.id, campaignId);
   }
 
   @Post('join')

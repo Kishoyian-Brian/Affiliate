@@ -110,7 +110,8 @@ export function getStartParam(): string | undefined {
 export function parseStartParam(param?: string) {
   if (!param) return null
 
-  const match = param.match(/^task(\d+)(?:_ref(\d+))?$/)
+  // Campaign ids are cuids; referrer is Telegram numeric id.
+  const match = param.match(/^task([A-Za-z0-9]+)(?:_ref(\d+))?$/)
   if (!match) return null
 
   return {

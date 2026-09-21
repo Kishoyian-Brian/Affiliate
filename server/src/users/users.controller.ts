@@ -13,7 +13,7 @@ export class UsersController {
 
   @Get('me')
   me(@CurrentUser() user: AuthUser) {
-    return this.users.findById(user.id);
+    return this.users.getProfile(user.id);
   }
 
   @Patch('me')

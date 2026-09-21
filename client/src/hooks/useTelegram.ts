@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { profileFromTelegram } from '../lib/auth'
+import { emptyProfileFromTelegram } from '../lib/auth'
 import {
   getInitData,
   getStartParam,
@@ -8,7 +8,6 @@ import {
   isInsideTelegram as detectTelegram,
   parseStartParam,
 } from '../lib/telegram'
-import { mockUser } from '../data/mock'
 import type { UserProfile } from '../types/user'
 
 function readTelegramSession() {
@@ -20,7 +19,7 @@ function readTelegramSession() {
   const telegramUser = getTelegramUser()
   return {
     inside: true,
-    user: telegramUser ? profileFromTelegram(mockUser, telegramUser) : null,
+    user: telegramUser ? emptyProfileFromTelegram(telegramUser) : null,
     initData: getInitData(),
     startParam: parseStartParam(getStartParam()),
   }

@@ -26,6 +26,24 @@ export function clearEarnerSession() {
   sessionStorage.removeItem(SESSION_KEY)
 }
 
+export function emptyProfileFromTelegram(telegramUser: TelegramUser): UserProfile {
+  return {
+    telegramId: telegramUser.id,
+    firstName: telegramUser.first_name,
+    lastName: telegramUser.last_name,
+    username: telegramUser.username,
+    balance: 0,
+    pendingBalance: 0,
+    currency: 'USD',
+    completedTasks: 0,
+    activeReferrals: 0,
+    memberSince: new Date().toISOString(),
+    totalEarned: 0,
+    accountStatus: 'active',
+    language: telegramUser.language_code ?? 'English',
+  }
+}
+
 export function profileFromTelegram(
   fallback: UserProfile,
   telegramUser?: TelegramUser,

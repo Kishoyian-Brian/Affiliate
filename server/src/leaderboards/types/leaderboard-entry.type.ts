@@ -1,7 +1,10 @@
 export interface LeaderboardEntry {
   rank: number;
-  userId: string;
+  telegramId: number;
   displayName: string;
-  totalEarned: string;
+  username?: string;
   completedTasks: number;
+  totalEarned: number;
+  currency: string;
+  isCurrentUser?: boolean;
 }

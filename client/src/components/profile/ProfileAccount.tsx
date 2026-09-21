@@ -46,6 +46,10 @@ export function ProfileAccount({ user }: ProfileAccountProps) {
           </dd>
         </div>
         <div className="profile-detail-row">
+          <dt>TON wallet</dt>
+          <dd>{user.tonAddress ? `${user.tonAddress.slice(0, 6)}…${user.tonAddress.slice(-4)}` : 'Not connected'}</dd>
+        </div>
+        <div className="profile-detail-row">
           <dt>Language</dt>
           <dd>{user.language}</dd>
         </div>
