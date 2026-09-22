@@ -130,6 +130,10 @@ export function TaskDetailPage() {
     if (!task) return
     haptic('light')
     if (isAffiliateTask(task)) {
+      if (!telegramId) {
+        toast('Open Tasklane from Telegram to share this campaign.', 'error')
+        return
+      }
       openTelegramUrl(buildAffiliateMiniAppLink(TELEGRAM_BOT_USERNAME, telegramId))
     } else {
       openTelegramChannel(task.channelUsername)
