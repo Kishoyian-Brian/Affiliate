@@ -41,6 +41,14 @@ export class EnvironmentVariables {
 
   @IsOptional()
   @IsString()
+  ADMIN_EMAIL: string = 'admin@tasklane.local';
+
+  @IsOptional()
+  @IsString()
+  ADMIN_PASSWORD: string = 'tasklane';
+
+  @IsOptional()
+  @IsString()
   ADMIN_JWT_SECRET: string = '';
 
   @IsOptional()

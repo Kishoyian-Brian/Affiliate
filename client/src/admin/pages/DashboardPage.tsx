@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { PageHeader } from '../components/ui/PageHeader'
 import { StatCard } from '../components/ui/StatCard'
 import { fetchCampaigns, fetchDashboard, fetchWithdrawals } from '../lib/api'
+import { getErrorMessage } from '../../lib/errors'
 import { formatNumber } from '../lib/format'
 import type { AdminCampaign, AdminWithdrawal, DashboardStats } from '../types'
 
@@ -11,20 +12,30 @@ export function DashboardPage() {
   const [campaigns, setCampaigns] = useState<AdminCampaign[]>([])
   const [withdrawals, setWithdrawals] = useState<AdminWithdrawal[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    void Promise.all([fetchDashboard(), fetchCampaigns(), fetchWithdrawals()]).then(
-      ([dashboard, campaignList, withdrawalList]) => {
+    void Promise.all([fetchDashboard(), fetchCampaigns(), fetchWithdrawals()])
+      .then(([dashboard, campaignList, withdrawalList]) => {
         setStats(dashboard)
         setCampaigns(campaignList.filter((c) => c.status === 'active').slice(0, 5))
         setWithdrawals(withdrawalList.filter((w) => w.status === 'pending').slice(0, 5))
-        setLoading(false)
-      },
-    )
+      })
+      .catch((err) => setError(getErrorMessage(err, 'Could not load dashboard.')))
+      .finally(() => setLoading(false))
   }, [])
 
-  if (loading || !stats) {
+  if (loading) {
     return <div className="admin-loading">Loading dashboard…</div>
+  }
+
+  if (error || !stats) {
+    return (
+      <section>
+        <PageHeader title="Dashboard" description="Overview of campaigns, verifications, and pending payouts." />
+        <p className="admin-error">{error ?? 'Could not load dashboard.'}</p>
+      </section>
+    )
   }
 
   return (

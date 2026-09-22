@@ -1,18 +1,16 @@
 import type { AdminSession } from '../types'
+import { ApiError } from '../../lib/errors'
 
 const SESSION_KEY = 'tasklane_admin_session'
-
-const DEMO_SESSION: AdminSession = {
-  id: 'admin-1',
-  name: 'Tasklane Admin',
-  email: 'admin@tasklane.local',
-}
+const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
 
 export function getStoredSession(): AdminSession | null {
   try {
     const raw = sessionStorage.getItem(SESSION_KEY)
     if (!raw) return null
-    return JSON.parse(raw) as AdminSession
+    const session = JSON.parse(raw) as AdminSession
+    if (!session.accessToken) return null
+    return session
   } catch {
     return null
   }
@@ -26,24 +24,49 @@ export function clearSession() {
   sessionStorage.removeItem(SESSION_KEY)
 }
 
+export function getAdminAccessToken() {
+  return getStoredSession()?.accessToken
+}
+
 export async function login(email: string, password: string): Promise<AdminSession> {
-  await delay(400)
+  const response = await fetch(`${API_BASE}/api/v1/auth/admin`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  })
 
-  const expectedPassword = import.meta.env.VITE_ADMIN_PASSWORD ?? 'tasklane'
-  const expectedEmail = import.meta.env.VITE_ADMIN_EMAIL ?? 'admin@tasklane.local'
-
-  if (email !== expectedEmail || password !== expectedPassword) {
-    throw new Error('Invalid email or password')
+  if (!response.ok) {
+    throw new ApiError(await parseAdminError(response, 'Invalid email or password'))
   }
 
-  storeSession(DEMO_SESSION)
-  return DEMO_SESSION
+  const body = (await response.json()) as {
+    accessToken: string
+    refreshToken: string
+    admin: { id: string; name: string; email: string }
+  }
+
+  const session: AdminSession = {
+    id: body.admin.id,
+    name: body.admin.name,
+    email: body.admin.email,
+    accessToken: body.accessToken,
+    refreshToken: body.refreshToken,
+  }
+  storeSession(session)
+  return session
 }
 
 export function logout() {
   clearSession()
 }
 
-function delay(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
+async function parseAdminError(response: Response, fallback: string) {
+  try {
+    const body = (await response.json()) as { message?: string | string[] }
+    if (Array.isArray(body.message)) return body.message.join(', ')
+    if (typeof body.message === 'string') return body.message
+  } catch {
+    /* ignore */
+  }
+  return fallback
 }

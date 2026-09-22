@@ -1,4 +1,5 @@
 import { PrismaClient, Prisma } from '@prisma/client';
+import { hashPassword } from '../src/common/utils/crypto';
 
 const prisma = new PrismaClient();
 
@@ -73,6 +74,21 @@ async function upsertCampaign(input: {
 }
 
 async function main() {
+  const adminEmail = (process.env.ADMIN_EMAIL ?? 'admin@tasklane.local').trim().toLowerCase();
+  const adminPassword = process.env.ADMIN_PASSWORD ?? 'tasklane';
+  await prisma.adminUser.upsert({
+    where: { email: adminEmail },
+    update: {
+      name: 'Tasklane Admin',
+      passwordHash: hashPassword(adminPassword),
+    },
+    create: {
+      name: 'Tasklane Admin',
+      email: adminEmail,
+      passwordHash: hashPassword(adminPassword),
+    },
+  });
+
   const cryptoDaily = await upsertChannel({
     username: 'cryptodaily',
     title: 'Crypto Daily',
@@ -274,7 +290,7 @@ async function main() {
   });
 
   const count = await prisma.campaign.count({ where: { status: 'active' } });
-  console.log(`Seeded campaigns. Active campaigns: ${count}`);
+  console.log(`Seeded admin ${adminEmail} and campaigns. Active campaigns: ${count}`);
 }
 
 main()

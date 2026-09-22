@@ -9,10 +9,9 @@ export function UsersPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    void fetchUsers().then((data) => {
-      setUsers(data)
-      setLoading(false)
-    })
+    void fetchUsers()
+      .then(setUsers)
+      .finally(() => setLoading(false))
   }, [])
 
   return (

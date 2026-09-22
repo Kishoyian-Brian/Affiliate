@@ -20,13 +20,12 @@ export function CampaignDetailPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    void Promise.all([fetchCampaign(id), fetchCampaignCompletions(id)]).then(
-      ([campaignData, completionData]) => {
+    void Promise.all([fetchCampaign(id), fetchCampaignCompletions(id)])
+      .then(([campaignData, completionData]) => {
         setCampaign(campaignData ?? null)
         setCompletions(completionData)
-        setLoading(false)
-      },
-    )
+      })
+      .finally(() => setLoading(false))
   }, [id])
 
   async function handleStatus(status: AdminCampaign['status']) {

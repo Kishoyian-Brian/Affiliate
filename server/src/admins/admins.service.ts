@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
+import { hashPassword } from '../common/utils/crypto';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { UpdateAdminDto } from './dto/update-admin.dto';
 
@@ -8,7 +9,16 @@ export class AdminsService {
   constructor(private readonly prisma: PrismaService) {}
 
   findAll() {
-    return this.prisma.adminUser.findMany({ orderBy: { createdAt: 'desc' } });
+    return this.prisma.adminUser.findMany({
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
   }
 
   findByEmail(email: string) {
@@ -19,8 +29,8 @@ export class AdminsService {
     return this.prisma.adminUser.create({
       data: {
         name: dto.name,
-        email: dto.email,
-        passwordHash: dto.password,
+        email: dto.email.trim().toLowerCase(),
+        passwordHash: hashPassword(dto.password),
       },
     });
   }
@@ -30,8 +40,8 @@ export class AdminsService {
       where: { id },
       data: {
         name: dto.name,
-        email: dto.email,
-        passwordHash: dto.password,
+        email: dto.email?.trim().toLowerCase(),
+        ...(dto.password ? { passwordHash: hashPassword(dto.password) } : {}),
       },
     });
   }

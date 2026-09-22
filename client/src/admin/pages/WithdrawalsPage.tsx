@@ -10,8 +10,11 @@ export function WithdrawalsPage() {
 
   const load = useCallback(async () => {
     setLoading(true)
-    setWithdrawals(await fetchWithdrawals())
-    setLoading(false)
+    try {
+      setWithdrawals(await fetchWithdrawals())
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => {

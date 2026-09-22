@@ -13,8 +13,11 @@ export function ChannelsPage() {
 
   const load = useCallback(async () => {
     setLoading(true)
-    setChannels(await fetchChannels())
-    setLoading(false)
+    try {
+      setChannels(await fetchChannels())
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => {

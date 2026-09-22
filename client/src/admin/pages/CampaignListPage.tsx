@@ -10,9 +10,11 @@ export function CampaignListPage() {
 
   const load = useCallback(async () => {
     setLoading(true)
-    const data = await fetchCampaigns()
-    setCampaigns(data)
-    setLoading(false)
+    try {
+      setCampaigns(await fetchCampaigns())
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => {

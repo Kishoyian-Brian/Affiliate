@@ -19,11 +19,26 @@ export class WithdrawalsService {
     private readonly notifications: NotificationsService,
   ) {}
 
-  findAll(filter: WithdrawalFilterDto) {
-    return this.prisma.withdrawal.findMany({
+  async findAll(filter: WithdrawalFilterDto) {
+    const withdrawals = await this.prisma.withdrawal.findMany({
       where: { status: filter.status as never },
+      include: { user: true },
       orderBy: { requestedAt: 'desc' },
     });
+
+    return withdrawals.map((item) => ({
+      id: item.id,
+      userId: item.userId,
+      telegramId: Number(item.user.telegramId),
+      displayName: item.user.displayName,
+      amount: Number(item.amount),
+      currency: item.currency,
+      method: item.method,
+      destination: item.destination,
+      status: item.status,
+      requestedAt: item.requestedAt.toISOString(),
+      fee: Number(item.fee),
+    }));
   }
 
   async request(userId: string, dto: RequestWithdrawalDto) {
@@ -96,8 +111,68 @@ export class WithdrawalsService {
     return withdrawal;
   }
 
-  review(id: string, dto: ReviewWithdrawalDto) {
-    return this.prisma.withdrawal.update({ where: { id }, data: { status: dto.status } });
+  async review(id: string, dto: ReviewWithdrawalDto) {
+    const existing = await this.prisma.withdrawal.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException('Withdrawal not found');
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const withdrawal = await tx.withdrawal.update({
+        where: { id },
+        data: { status: dto.status },
+      });
+
+      if (dto.status === 'completed') {
+        await tx.ledgerEntry.upsert({
+          where: { withdrawalId_type: { withdrawalId: id, type: 'withdrawal_paid' } },
+          update: { amount: existing.amount },
+          create: {
+            userId: existing.userId,
+            type: 'withdrawal_paid',
+            amount: existing.amount,
+            currency: existing.currency,
+            withdrawalId: id,
+          },
+        });
+      }
+
+      if (dto.status === 'rejected') {
+        await tx.ledgerEntry.upsert({
+          where: { withdrawalId_type: { withdrawalId: id, type: 'withdrawal_rejected' } },
+          update: { amount: existing.amount },
+          create: {
+            userId: existing.userId,
+            type: 'withdrawal_rejected',
+            amount: existing.amount,
+            currency: existing.currency,
+            withdrawalId: id,
+          },
+        });
+      }
+
+      return withdrawal;
+    });
+
+    const title =
+      dto.status === 'completed'
+        ? 'Withdrawal paid'
+        : dto.status === 'rejected'
+          ? 'Withdrawal rejected'
+          : 'Withdrawal processing';
+    const body =
+      dto.status === 'completed'
+        ? `$${Number(existing.amount).toFixed(2)} was sent to your payout destination.`
+        : dto.status === 'rejected'
+          ? `$${Number(existing.amount).toFixed(2)} was returned to your available balance.`
+          : `$${Number(existing.amount).toFixed(2)} is being processed.`;
+
+    await this.notifications.create(existing.userId, {
+      type: 'withdrawal',
+      title,
+      body,
+      href: '/app/wallet',
+    });
+
+    return updated;
   }
 }
 

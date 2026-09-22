@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AdminsModule } from './admins/admins.module';
+import { AdminModule } from './admin/admin.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuditModule } from './audit/audit.module';
@@ -40,6 +41,7 @@ import { WithdrawalsModule } from './withdrawals/withdrawals.module';
     AuthModule,
     UsersModule,
     AdminsModule,
+    AdminModule,
     CampaignsModule,
     TasksModule,
     ParticipationModule,

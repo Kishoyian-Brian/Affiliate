@@ -8,12 +8,58 @@ import { UpdateUserStatusDto } from './dto/update-user-status.dto';
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
-    return this.prisma.user.findMany({ orderBy: { createdAt: 'desc' } });
-  }
-
   findById(id: string) {
     return this.prisma.user.findUnique({ where: { id } });
+  }
+
+  async findAll() {
+    const users = await this.prisma.user.findMany({ orderBy: { createdAt: 'desc' } });
+    if (users.length === 0) return [];
+
+    const ids = users.map((user) => user.id);
+    const [completed, ledger] = await Promise.all([
+      this.prisma.completion.groupBy({
+        by: ['userId'],
+        where: { userId: { in: ids }, status: 'completed' },
+        _count: { _all: true },
+      }),
+      this.prisma.ledgerEntry.groupBy({
+        by: ['userId', 'type'],
+        where: { userId: { in: ids } },
+        _sum: { amount: true },
+      }),
+    ]);
+
+    const completedByUser = new Map(completed.map((row) => [row.userId, row._count._all]));
+    const amounts = new Map<string, Record<string, number>>();
+    for (const row of ledger) {
+      const current = amounts.get(row.userId) ?? {};
+      current[row.type] = Number(row._sum.amount ?? 0);
+      amounts.set(row.userId, current);
+    }
+
+    return users.map((user) => {
+      const ledgerByType = amounts.get(user.id) ?? {};
+      const released = ledgerByType.released ?? 0;
+      const reserved = ledgerByType.withdrawal_reserve ?? 0;
+      const paid = ledgerByType.withdrawal_paid ?? 0;
+      const rejected = ledgerByType.withdrawal_rejected ?? 0;
+      const held = ledgerByType.held ?? 0;
+      const revoked = ledgerByType.revoked ?? 0;
+
+      return {
+        id: user.id,
+        telegramId: Number(user.telegramId),
+        username: user.username ?? undefined,
+        displayName: user.displayName,
+        balance: round2(released - reserved - paid + rejected),
+        pendingBalance: round2(held - revoked),
+        currency: 'USD',
+        completedTasks: completedByUser.get(user.id) ?? 0,
+        accountStatus: user.status === 'restricted' ? 'restricted' : 'active',
+        memberSince: user.createdAt.toISOString(),
+      };
+    });
   }
 
   async getProfile(id: string) {

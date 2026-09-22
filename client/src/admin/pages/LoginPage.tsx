@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
+import { getErrorMessage } from '../../lib/errors'
 import { useAdminAuth } from '../context/AdminAuthContext'
 
 export function LoginPage() {
@@ -20,8 +21,8 @@ export function LoginPage() {
     setError(null)
     try {
       await login(email, password)
-    } catch {
-      setError('Invalid email or password')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Invalid email or password'))
     }
   }
 

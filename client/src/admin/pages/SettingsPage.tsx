@@ -5,7 +5,7 @@ export function SettingsPage() {
     <section>
       <PageHeader
         title="Settings"
-        description="Platform defaults. Backend integration will persist these values."
+        description="Platform defaults. Values below match the live API."
       />
 
       <div className="admin-card">
@@ -29,7 +29,8 @@ export function SettingsPage() {
           </div>
         </dl>
         <p className="admin-muted">
-          Bot token and admin credentials will be configured via environment variables on the server.
+          Bot token, Mini App URL, and JWT secrets are configured on the server via environment
+          variables. Campaigns, users, and withdrawals are live from the API.
         </p>
       </div>
     </section>

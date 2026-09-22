@@ -1,11 +1,5 @@
-import {
-  mockCampaigns,
-  mockChannels,
-  mockCompletions,
-  mockDashboard,
-  mockUsers,
-  mockWithdrawals,
-} from '../data/mock'
+import { ApiError } from '../../lib/errors'
+import { getAdminAccessToken } from './auth'
 import type {
   AdminCampaign,
   AdminWithdrawal,
@@ -17,88 +11,121 @@ import type {
   EarnerUser,
 } from '../types'
 
-function delay(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
+const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
+
+function authHeaders(extra?: HeadersInit): HeadersInit {
+  const token = getAdminAccessToken()
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...extra,
+  }
+}
+
+async function parseError(response: Response, fallback: string) {
+  try {
+    const body = (await response.json()) as { message?: string | string[] }
+    if (Array.isArray(body.message)) return body.message.join(', ')
+    if (typeof body.message === 'string') return body.message
+  } catch {
+    /* ignore */
+  }
+  return fallback
+}
+
+async function adminFetch<T>(path: string, init: RequestInit | undefined, fallback: string): Promise<T> {
+  const token = getAdminAccessToken()
+  if (!token) {
+    throw new ApiError('Sign in to continue')
+  }
+
+  const response = await fetch(`${API_BASE}${path}`, {
+    ...init,
+    headers: authHeaders(init?.headers),
+  })
+
+  if (!response.ok) {
+    throw new ApiError(await parseError(response, fallback))
+  }
+
+  if (response.status === 204) return undefined as T
+  return (await response.json()) as T
 }
 
 export async function fetchDashboard(): Promise<DashboardStats> {
-  await delay(300)
-  return { ...mockDashboard }
+  return adminFetch('/api/v1/admin/dashboard', undefined, 'Could not load dashboard')
 }
 
 export async function fetchCampaigns(): Promise<AdminCampaign[]> {
-  await delay(350)
-  return mockCampaigns.map((c) => ({ ...c, stats: { ...c.stats } }))
+  return adminFetch('/api/v1/admin/campaigns', undefined, 'Could not load campaigns')
 }
 
 export async function fetchCampaign(id: string): Promise<AdminCampaign | undefined> {
-  await delay(250)
-  const campaign = mockCampaigns.find((c) => c.id === id)
-  return campaign ? { ...campaign, stats: { ...campaign.stats } } : undefined
+  const token = getAdminAccessToken()
+  if (!token) throw new ApiError('Sign in to continue')
+
+  const response = await fetch(`${API_BASE}/api/v1/admin/campaigns/${encodeURIComponent(id)}`, {
+    headers: authHeaders(),
+  })
+
+  if (response.status === 404) return undefined
+  if (!response.ok) {
+    throw new ApiError(await parseError(response, 'Could not load campaign'))
+  }
+
+  return (await response.json()) as AdminCampaign
 }
 
 export async function fetchCampaignCompletions(campaignId: string): Promise<CampaignCompletion[]> {
-  await delay(200)
-  return mockCompletions.filter((c) => c.campaignId === campaignId)
+  return adminFetch(
+    `/api/v1/admin/campaigns/${encodeURIComponent(campaignId)}/completions`,
+    undefined,
+    'Could not load completions',
+  )
 }
 
 export async function createCampaign(input: CampaignInput): Promise<AdminCampaign> {
-  await delay(500)
-  const id = String(Date.now())
-  const campaign: AdminCampaign = {
-    id,
-    ...input,
-    slotsRemaining: input.slotsTotal,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    stats: { started: 0, verified: 0, onHold: 0, completed: 0, failed: 0, cancelled: 0 },
-  }
-  mockCampaigns.unshift(campaign)
-  return { ...campaign }
+  return adminFetch('/api/v1/campaigns', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  }, 'Could not create campaign')
 }
 
 export async function updateCampaign(id: string, input: CampaignInput): Promise<AdminCampaign> {
-  await delay(500)
-  const index = mockCampaigns.findIndex((c) => c.id === id)
-  if (index === -1) throw new Error('Campaign not found')
-  const existing = mockCampaigns[index]
-  const updated: AdminCampaign = {
-    ...existing,
-    ...input,
-    updatedAt: new Date().toISOString(),
-  }
-  mockCampaigns[index] = updated
-  return { ...updated, stats: { ...updated.stats } }
+  return adminFetch(
+    `/api/v1/campaigns/${encodeURIComponent(id)}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify(input),
+    },
+    'Could not update campaign',
+  )
 }
 
 export async function setCampaignStatus(id: string, status: CampaignStatus): Promise<void> {
-  await delay(300)
-  const campaign = mockCampaigns.find((c) => c.id === id)
-  if (!campaign) throw new Error('Campaign not found')
-  campaign.status = status
-  campaign.updatedAt = new Date().toISOString()
+  await adminFetch(
+    `/api/v1/campaigns/${encodeURIComponent(id)}/status`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    },
+    'Could not update campaign status',
+  )
 }
 
 export async function fetchChannels(): Promise<ChannelRecord[]> {
-  await delay(300)
-  return mockChannels.map((c) => ({ ...c }))
+  return adminFetch('/api/v1/channels', undefined, 'Could not load channels')
 }
 
 export async function testChannelBot(username: string): Promise<BotCheckResult> {
-  await delay(800)
-  const channel = mockChannels.find((c) => c.username === username.replace('@', ''))
-  if (!channel) {
-    return { ok: false, message: 'Channel not in registry. Add it when creating a campaign.' }
-  }
-  if (channel.botAccess === 'failed') {
-    return {
-      ok: false,
-      message: 'Bot is not admin on this channel or lacks membership read access.',
-    }
-  }
-  channel.lastCheckedAt = new Date().toISOString()
-  channel.botAccess = 'ok'
-  return { ok: true, message: 'Bot can verify membership on this channel.' }
+  return adminFetch(
+    '/api/v1/channels/test-bot',
+    {
+      method: 'POST',
+      body: JSON.stringify({ username }),
+    },
+    'Could not test bot access',
+  )
 }
 
 export interface BotCheckResult {
@@ -107,21 +134,23 @@ export interface BotCheckResult {
 }
 
 export async function fetchUsers(): Promise<EarnerUser[]> {
-  await delay(300)
-  return mockUsers.map((u) => ({ ...u }))
+  return adminFetch('/api/v1/users', undefined, 'Could not load users')
 }
 
 export async function fetchWithdrawals(): Promise<AdminWithdrawal[]> {
-  await delay(300)
-  return mockWithdrawals.map((w) => ({ ...w }))
+  return adminFetch('/api/v1/withdrawals', undefined, 'Could not load withdrawals')
 }
 
 export async function updateWithdrawalStatus(
   id: string,
   status: AdminWithdrawal['status'],
 ): Promise<void> {
-  await delay(400)
-  const withdrawal = mockWithdrawals.find((w) => w.id === id)
-  if (!withdrawal) throw new Error('Withdrawal not found')
-  withdrawal.status = status
+  await adminFetch(
+    `/api/v1/withdrawals/${encodeURIComponent(id)}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    },
+    'Could not update withdrawal',
+  )
 }
