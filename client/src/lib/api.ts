@@ -92,6 +92,8 @@ export async function fetchTask(taskId: string): Promise<Task | undefined> {
 }
 
 export async function fetchCompletion(taskId: string): Promise<TaskCompletion | undefined> {
+  if (!getAccessToken()) return undefined
+
   const data = (await requireAuthFetch(
     `/api/v1/tasks/me/completions/${encodeURIComponent(taskId)}`,
     undefined,

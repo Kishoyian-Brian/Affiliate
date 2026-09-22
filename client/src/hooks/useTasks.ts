@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { Task, TaskCompletion } from '../types/task'
+import { useAuth } from './useAuth'
+import { getErrorMessage } from '../lib/errors'
 import {
   fetchAllCompletions,
   fetchCompletion,
@@ -37,27 +39,35 @@ export function useTasks() {
 }
 
 export function useTaskDetail(taskId: string) {
+  const { accessToken } = useAuth()
   const [task, setTask] = useState<Task | null>(null)
   const [completion, setCompletion] = useState<TaskCompletion | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [verifying, setVerifying] = useState(false)
   const [verifyMessage, setVerifyMessage] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
+    setError(null)
 
     try {
-      const [taskData, completionData] = await Promise.all([
-        fetchTask(taskId),
-        fetchCompletion(taskId),
-      ])
-
+      const taskData = await fetchTask(taskId)
       setTask(taskData ?? null)
+    } catch (err) {
+      setTask(null)
+      setError(getErrorMessage(err, 'Could not load campaign'))
+    }
+
+    try {
+      const completionData = await fetchCompletion(taskId)
       setCompletion(completionData ?? null)
+    } catch {
+      setCompletion(null)
     } finally {
       setLoading(false)
     }
-  }, [taskId])
+  }, [accessToken, taskId])
 
   useEffect(() => {
     void load()
@@ -101,6 +111,7 @@ export function useTaskDetail(taskId: string) {
     task,
     completion,
     loading,
+    error,
     verifying,
     verifyMessage,
     verify,

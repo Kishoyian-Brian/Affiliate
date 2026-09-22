@@ -21,7 +21,7 @@ export function TaskDetailPage() {
   const { taskId = '' } = useParams()
   const { user, initData } = useAuth()
   const { toast } = useToast()
-  const { task, completion, loading, verifying, verifyMessage, verify } = useTaskDetail(taskId)
+  const { task, completion, loading, error, verifying, verifyMessage, verify } = useTaskDetail(taskId)
   const { progress, history } = useReferrals(task && isShareTask(task) ? taskId : undefined)
   const [joined, setJoined] = useState(false)
 
@@ -149,8 +149,8 @@ export function TaskDetailPage() {
     return (
       <section className="page">
         <div className="state-block">
-          <h2>Campaign not found</h2>
-          <p>This campaign may have ended or the link is invalid.</p>
+          <h2>{error ? 'Could not open campaign' : 'Campaign not found'}</h2>
+          <p>{error ?? 'This campaign may have ended or the link is invalid.'}</p>
           <Link to="/app" className="btn btn-secondary">
             Back to campaigns
           </Link>
