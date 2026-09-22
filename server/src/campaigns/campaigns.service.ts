@@ -169,6 +169,28 @@ export class CampaignsService {
     return this.toAdminCampaign(campaign, stats.get(id) ?? EMPTY_STATS);
   }
 
+  async remove(id: string) {
+    await this.requireCampaign(id);
+    const completions = await this.prisma.completion.findMany({
+      where: { campaignId: id },
+      select: { id: true },
+    });
+    const completionIds = completions.map((completion) => completion.id);
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.referral.deleteMany({
+        where: {
+          OR: [{ campaignId: id }, { referredCompletionId: { in: completionIds } }],
+        },
+      });
+      if (completionIds.length > 0) {
+        await tx.ledgerEntry.deleteMany({ where: { completionId: { in: completionIds } } });
+        await tx.completion.deleteMany({ where: { id: { in: completionIds } } });
+      }
+      await tx.campaign.delete({ where: { id } });
+    });
+  }
+
   async setStatus(id: string, dto: UpdateCampaignStatusDto) {
     await this.requireCampaign(id);
     const campaign = await this.prisma.campaign.update({

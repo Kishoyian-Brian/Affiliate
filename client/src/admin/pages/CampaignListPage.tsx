@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
 import { CampaignTable } from '../components/campaigns/CampaignTable'
 import { PageHeader } from '../components/ui/PageHeader'
-import { fetchCampaigns, setCampaignStatus } from '../lib/api'
+import { useToast } from '../../hooks/useToast'
+import { getErrorMessage } from '../../lib/errors'
+import { deleteCampaign, fetchCampaigns, setCampaignStatus } from '../lib/api'
 import type { AdminCampaign } from '../types'
 
 export function CampaignListPage() {
+  const { toast } = useToast()
   const [campaigns, setCampaigns] = useState<AdminCampaign[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -26,6 +29,19 @@ export function CampaignListPage() {
     await load()
   }
 
+  async function handleDelete(id: string) {
+    const campaign = campaigns.find((item) => item.id === id)
+    const confirmed = window.confirm(`Delete “${campaign?.title ?? 'this campaign'}”? This cannot be undone.`)
+    if (!confirmed) return
+    try {
+      await deleteCampaign(id)
+      toast('Campaign deleted', 'success')
+      await load()
+    } catch (err) {
+      toast(getErrorMessage(err, 'Could not delete campaign'), 'error')
+    }
+  }
+
   return (
     <section>
       <PageHeader
@@ -36,7 +52,11 @@ export function CampaignListPage() {
       {loading ? (
         <div className="admin-loading">Loading campaigns…</div>
       ) : (
-        <CampaignTable campaigns={campaigns} onStatusChange={(id, s) => void handleStatusChange(id, s)} />
+        <CampaignTable
+          campaigns={campaigns}
+          onStatusChange={(id, s) => void handleStatusChange(id, s)}
+          onDelete={(id) => void handleDelete(id)}
+        />
       )}
     </section>
   )

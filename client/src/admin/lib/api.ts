@@ -103,6 +103,14 @@ export async function updateCampaign(id: string, input: CampaignInput): Promise<
   )
 }
 
+export async function deleteCampaign(id: string): Promise<void> {
+  await adminFetch(
+    `/api/v1/campaigns/${encodeURIComponent(id)}`,
+    { method: 'DELETE' },
+    'Could not delete campaign',
+  )
+}
+
 export async function setCampaignStatus(id: string, status: CampaignStatus): Promise<void> {
   await adminFetch(
     `/api/v1/campaigns/${encodeURIComponent(id)}/status`,

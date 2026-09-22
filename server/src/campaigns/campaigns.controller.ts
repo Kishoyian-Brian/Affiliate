@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query } from '@nestjs/common';
 import { Public } from '../common/decorators/public.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/constants/roles';
@@ -40,5 +40,12 @@ export class CampaignsController {
   @Patch(':id/status')
   setStatus(@Param('id') id: string, @Body() dto: UpdateCampaignStatusDto) {
     return this.campaigns.setStatus(id, dto);
+  }
+
+  @Roles(Role.Admin)
+  @Delete(':id')
+  @HttpCode(204)
+  remove(@Param('id') id: string) {
+    return this.campaigns.remove(id);
   }
 }

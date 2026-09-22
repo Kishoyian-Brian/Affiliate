@@ -8,9 +8,10 @@ import { CampaignStatusBadge } from './CampaignStatusBadge'
 interface CampaignTableProps {
   campaigns: AdminCampaign[]
   onStatusChange: (id: string, status: AdminCampaign['status']) => void
+  onDelete: (id: string) => void
 }
 
-export function CampaignTable({ campaigns, onStatusChange }: CampaignTableProps) {
+export function CampaignTable({ campaigns, onStatusChange, onDelete }: CampaignTableProps) {
   if (campaigns.length === 0) {
     return <div className="admin-empty">No campaigns yet.</div>
   }
@@ -91,6 +92,13 @@ export function CampaignTable({ campaigns, onStatusChange }: CampaignTableProps)
                     Publish
                   </button>
                 ) : null}
+                <button
+                  type="button"
+                  className="admin-btn-text danger"
+                  onClick={() => onDelete(campaign.id)}
+                >
+                  Delete
+                </button>
               </div>
             </td>
           </tr>

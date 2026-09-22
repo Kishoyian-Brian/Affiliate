@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { CampaignStatusBadge } from '../components/campaigns/CampaignStatusBadge'
 import { AdminTable } from '../components/ui/AdminTable'
 import { PageHeader } from '../components/ui/PageHeader'
 import { StatCard } from '../components/ui/StatCard'
 import { getCampaignTargetLabel } from '../../lib/affiliate'
+import { useToast } from '../../hooks/useToast'
+import { getErrorMessage } from '../../lib/errors'
 import {
+  deleteCampaign,
   fetchCampaign,
   fetchCampaignCompletions,
   setCampaignStatus,
@@ -15,6 +18,8 @@ import type { AdminCampaign, CampaignCompletion } from '../types'
 
 export function CampaignDetailPage() {
   const { id = '' } = useParams()
+  const navigate = useNavigate()
+  const { toast } = useToast()
   const [campaign, setCampaign] = useState<AdminCampaign | null>(null)
   const [completions, setCompletions] = useState<CampaignCompletion[]>([])
   const [loading, setLoading] = useState(true)
@@ -32,6 +37,19 @@ export function CampaignDetailPage() {
     if (!campaign) return
     await setCampaignStatus(campaign.id, status)
     setCampaign({ ...campaign, status })
+  }
+
+  async function handleDelete() {
+    if (!campaign) return
+    const confirmed = window.confirm(`Delete “${campaign.title}”? This cannot be undone.`)
+    if (!confirmed) return
+    try {
+      await deleteCampaign(campaign.id)
+      toast('Campaign deleted', 'success')
+      navigate('/admin/campaigns')
+    } catch (err) {
+      toast(getErrorMessage(err, 'Could not delete campaign'), 'error')
+    }
   }
 
   if (loading) return <div className="admin-loading">Loading…</div>
@@ -73,6 +91,9 @@ export function CampaignDetailPage() {
             Publish
           </button>
         ) : null}
+        <button type="button" className="admin-btn admin-btn-secondary" onClick={() => void handleDelete()}>
+          Delete
+        </button>
       </div>
 
       <div className="admin-stat-grid">
