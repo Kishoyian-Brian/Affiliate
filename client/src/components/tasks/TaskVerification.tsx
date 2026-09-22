@@ -43,7 +43,7 @@ export function TaskVerification({
           </button>
           <p className="helper-text">
             {affiliate
-              ? 'Telegram will ask you to launch. Confirm Launch to open it inside Telegram — no site URL is shown.'
+              ? 'Telegram will ask you to launch. Confirm Launch to open it inside Telegram.'
               : 'Opens Telegram. Subscribe to the channel, then return here.'}
           </p>
         </div>

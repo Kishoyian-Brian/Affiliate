@@ -1,4 +1,5 @@
 import type { Task } from '../../types/task'
+import { formatMoney } from '../../lib/format'
 import { isAffiliateTask } from '../../lib/task'
 
 interface TaskRequirementProps {
@@ -54,7 +55,7 @@ export function TaskRequirement({ task }: TaskRequirementProps) {
           <strong>Limit</strong>
           <span>
             {affiliate
-              ? '$40 per qualified friend'
+              ? `${formatMoney(task.rewardAmount, task.rewardCurrency)} per qualified friend`
               : `${requirements.maxCompletionsPerUser} completion per account`}
           </span>
         </li>

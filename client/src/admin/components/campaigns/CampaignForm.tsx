@@ -2,6 +2,18 @@ import { useState, type FormEvent } from 'react'
 import { getAffiliateHostname, normalizeAffiliateUrl } from '../../../lib/affiliate'
 import type { AdminCampaign, CampaignInput } from '../../types'
 
+const defaultSubscribeRules = [
+  'Join the channel before pressing Verify.',
+  'Stay subscribed through the hold period.',
+]
+
+const defaultAffiliateRules = [
+  'Tap Launch and confirm so the trading app opens inside Telegram.',
+  'Invite friends from Telegram — do not share a website URL.',
+  'The reward is paid only after a referred friend deposits and actually plays.',
+  'Self-referrals and duplicate accounts do not qualify.',
+]
+
 const emptyForm: CampaignInput = {
   title: '',
   shortDescription: '',
@@ -21,7 +33,7 @@ const emptyForm: CampaignInput = {
     newMembersOnly: false,
     maxCompletionsPerUser: 1,
   },
-  rules: ['Join the channel before pressing Verify.', 'Stay subscribed through the hold period.'],
+  rules: defaultSubscribeRules,
   status: 'draft',
   startAt: new Date().toISOString().slice(0, 10),
   endAt: new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10),
@@ -143,6 +155,12 @@ export function CampaignForm({ initial, saving, onSubmit, onCancel }: CampaignFo
                       }
                     : {}),
                 }))
+                if (
+                  type === 'affiliate' &&
+                  rulesText === defaultSubscribeRules.join('\n')
+                ) {
+                  setRulesText(defaultAffiliateRules.join('\n'))
+                }
               }}
             >
               <option value="subscribe">Subscribe</option>
@@ -169,7 +187,7 @@ export function CampaignForm({ initial, saving, onSubmit, onCancel }: CampaignFo
         <h2>{form.type === 'affiliate' ? 'Affiliate site' : 'Target channel'}</h2>
         <p className="admin-form-note">
           {form.type === 'affiliate'
-            ? 'Earners share a tagged link. $40 is paid when a referred friend deposits and plays.'
+            ? 'Earners share a tagged link. The reward amount is paid when a referred friend deposits and plays.'
             : 'You add every campaign manually. Ensure the bot is admin on this channel before publishing.'}
         </p>
         <div className="admin-form-grid">

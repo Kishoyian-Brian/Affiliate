@@ -14,6 +14,7 @@ import { useReferrals } from '../hooks/useReferrals'
 import { useTaskDetail } from '../hooks/useTasks'
 import { useToast } from '../hooks/useToast'
 import { buildAffiliateMiniAppLink } from '../lib/affiliate'
+import { formatMoney } from '../lib/format'
 import { isAffiliateTask, isShareTask } from '../lib/task'
 import { haptic, openTelegramChannel, openTelegramUrl, TELEGRAM_BOT_USERNAME } from '../lib/telegram'
 
@@ -58,7 +59,7 @@ export function TaskDetailPage() {
         },
         {
           id: 4,
-          label: '$40 released to your wallet',
+          label: `${formatMoney(task.rewardAmount, task.rewardCurrency)} released to your wallet`,
           done: completion?.rewardStatus === 'released',
         },
       ]
@@ -191,11 +192,18 @@ export function TaskDetailPage() {
             <h2>{affiliate ? 'Invite friends' : 'Referral progress'}</h2>
             <p>
               {affiliate
-                ? '$40 posts when a referred friend deposits and plays. Invites open inside Telegram.'
+                ? `${formatMoney(task.rewardAmount, task.rewardCurrency)} posts when a referred friend deposits and plays. Invites open inside Telegram.`
                 : 'Only independently verified subscribers count.'}
             </p>
           </header>
-          {progress ? <ReferralStats progress={progress} perConversion={affiliate} /> : null}
+          {progress ? (
+            <ReferralStats
+              progress={progress}
+              perConversion={affiliate}
+              rewardAmount={task.rewardAmount}
+              rewardCurrency={task.rewardCurrency}
+            />
+          ) : null}
           {referralLink ? (
             <ReferralLinkCard
               referralLink={referralLink}
