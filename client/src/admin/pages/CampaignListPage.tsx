@@ -7,7 +7,7 @@ import { deleteCampaign, fetchCampaigns, setCampaignStatus } from '../lib/api'
 import type { AdminCampaign } from '../types'
 
 export function CampaignListPage() {
-  const { toast } = useToast()
+  const { toast, confirm } = useToast()
   const [campaigns, setCampaigns] = useState<AdminCampaign[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -31,7 +31,7 @@ export function CampaignListPage() {
 
   async function handleDelete(id: string) {
     const campaign = campaigns.find((item) => item.id === id)
-    const confirmed = window.confirm(`Delete “${campaign?.title ?? 'this campaign'}”? This cannot be undone.`)
+    const confirmed = await confirm(`Delete “${campaign?.title ?? 'this campaign'}”? This cannot be undone.`)
     if (!confirmed) return
     try {
       await deleteCampaign(id)

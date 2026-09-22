@@ -19,7 +19,7 @@ import type { AdminCampaign, CampaignCompletion } from '../types'
 export function CampaignDetailPage() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
-  const { toast } = useToast()
+  const { toast, confirm } = useToast()
   const [campaign, setCampaign] = useState<AdminCampaign | null>(null)
   const [completions, setCompletions] = useState<CampaignCompletion[]>([])
   const [loading, setLoading] = useState(true)
@@ -41,7 +41,7 @@ export function CampaignDetailPage() {
 
   async function handleDelete() {
     if (!campaign) return
-    const confirmed = window.confirm(`Delete “${campaign.title}”? This cannot be undone.`)
+    const confirmed = await confirm(`Delete “${campaign.title}”? This cannot be undone.`)
     if (!confirmed) return
     try {
       await deleteCampaign(campaign.id)
