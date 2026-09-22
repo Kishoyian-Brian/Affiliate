@@ -1,4 +1,5 @@
 import { ApiError } from '../../lib/errors'
+import { normalizeApiBase } from '../../lib/api'
 import { getAdminAccessToken } from './auth'
 import type {
   AdminCampaign,
@@ -11,7 +12,7 @@ import type {
   EarnerUser,
 } from '../types'
 
-const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
+const API_BASE = normalizeApiBase(import.meta.env.VITE_API_URL)
 
 function authHeaders(extra?: HeadersInit): HeadersInit {
   const token = getAdminAccessToken()

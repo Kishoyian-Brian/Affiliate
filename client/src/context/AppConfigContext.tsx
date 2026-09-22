@@ -1,4 +1,5 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react'
+import { normalizeApiBase } from '../lib/api'
 
 export interface AppConfig {
   minWithdrawal: number
@@ -16,7 +17,7 @@ const defaults: AppConfig = {
   withdrawalFeePct: 2,
   defaultHoldHours: 48,
   currency: 'USD',
-  apiBaseUrl: import.meta.env.VITE_API_URL ?? 'http://localhost:3000',
+  apiBaseUrl: normalizeApiBase(import.meta.env.VITE_API_URL),
   telegramBotUsername: import.meta.env.VITE_TELEGRAM_BOT_USERNAME ?? 'tasklane_bot',
   telegramMiniAppUrl:
     import.meta.env.VITE_TELEGRAM_MINI_APP_URL ?? 'https://client-psi-six-83.vercel.app',

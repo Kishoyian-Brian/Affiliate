@@ -10,7 +10,7 @@ import type { PayoutMethod } from '../types/withdrawal'
 import { ApiError } from './errors'
 import { getAccessToken } from './auth'
 
-const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
+const API_BASE = normalizeApiBase(import.meta.env.VITE_API_URL)
 
 function authHeaders(extra?: HeadersInit): HeadersInit {
   const token = getAccessToken()
@@ -249,6 +249,11 @@ export async function requestWithdrawal(
   )
 
   return fetchWallet()
+}
+
+export function normalizeApiBase(value?: string) {
+  const raw = (value?.trim() || 'http://localhost:3000').replace(/\/+$/, '')
+  return raw.replace(/\/api(?:\/v1)?$/i, '')
 }
 
 export function getApiBaseUrl() {

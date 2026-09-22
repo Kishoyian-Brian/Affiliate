@@ -1,8 +1,9 @@
 import type { AdminSession } from '../types'
 import { ApiError } from '../../lib/errors'
+import { normalizeApiBase } from '../../lib/api'
 
 const SESSION_KEY = 'tasklane_admin_session'
-const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
+const API_BASE = normalizeApiBase(import.meta.env.VITE_API_URL)
 
 export function getStoredSession(): AdminSession | null {
   try {
